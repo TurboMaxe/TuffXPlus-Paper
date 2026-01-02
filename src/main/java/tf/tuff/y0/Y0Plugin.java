@@ -95,6 +95,7 @@ public class Y0Plugin extends JavaPlugin implements Listener, PluginMessageListe
 
     public Y0Plugin(TuffX plugin){
         this.plugin = plugin;
+        onTuffXEnable();
     }
     
     private void ld(String m) {
@@ -112,8 +113,7 @@ public class Y0Plugin extends JavaPlugin implements Listener, PluginMessageListe
         PacketEvents.getAPI().load();
     }
 
-    @Override
-    public void onEnable() {
+    public void onTuffXEnable() {
         PacketEvents.getAPI().init();
 
         saveDefaultConfig();
@@ -167,8 +167,7 @@ public class Y0Plugin extends JavaPlugin implements Listener, PluginMessageListe
 
     public record CSC(int x, int y, int z) {}
 
-    @Override
-    public void onDisable() {
+    public void onTuffXDisable() {
         if (serverRegistry != null) {
             serverRegistry.disconnect();
             serverRegistry = null;
