@@ -39,7 +39,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import it.unimi.dsi.fastutil.shorts.*;
 import it.unimi.dsi.fastutil.bytes.*;
 
-public class TuffX extends JavaPlugin implements Listener, PluginMessageListener {
+public class Y0Plugin extends JavaPlugin implements Listener, PluginMessageListener {
 
     public static final String CH = "eagler:below_y0";
     public ViaBlockIds v;
@@ -203,9 +203,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         return aib.contains(p.getUniqueId());
     }
 
-    @Override
-    public void onPluginMessageReceived(String ch, Player p, byte[] m) {
-        if (!ch.equals(CH) || !p.isOnline()) return;
+    public void handlePacket(Player p, byte[] m) {
         try (DataInputStream i = new DataInputStream(new ByteArrayInputStream(m))) {
             int x = i.readInt();
             int y = i.readInt();
