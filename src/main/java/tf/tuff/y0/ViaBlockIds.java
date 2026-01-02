@@ -1,4 +1,4 @@
-package tf.tuff;
+package tf.tuff.y0;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viaversion.viaversion.api.Via;
