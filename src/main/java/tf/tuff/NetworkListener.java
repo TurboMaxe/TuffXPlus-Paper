@@ -1,0 +1,42 @@
+package tf.tuff;
+
+import com.github.retrooper.packetevents.event.PacketListener;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerChunkData;
+import org.bukkit.Chunk;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+
+public class NetworkListener implements PacketListener {
+
+    private final TuffX plugin;
+
+    public ChunkPacketListener(TuffX plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void onPacketSend(PacketSendEvent event) {
+        if (event.getPacketType() == PacketType.Play.Server.CHUNK_DATA) {
+            Player player = (Player) event.getPlayer();
+
+            if (player == null || !plugin.isPlayerReady(player)) {
+                return;
+            }
+
+            WrapperPlayServerChunkData wrapper = new WrapperPlayServerChunkData(event);
+            int chunkX = wrapper.getColumn().getX();
+            int chunkZ = wrapper.getColumn().getZ();
+
+            World world = player.getWorld();
+            
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (player.isOnline() && world.isChunkLoaded(chunkX, chunkZ)) {
+                    Chunk chunk = world.getChunkAt(chunkX, chunkZ);
+                    plugin.processAndSendChunk(player, chunk);
+                }
+            });
+        }
+    }
+}
