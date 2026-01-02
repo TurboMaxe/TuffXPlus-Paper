@@ -1,4 +1,4 @@
-package tf.tuff.y0;
+package tf.tuff;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
@@ -39,10 +39,14 @@ import it.unimi.dsi.fastutil.objects.*;
 import it.unimi.dsi.fastutil.shorts.*;
 import it.unimi.dsi.fastutil.bytes.*;
 
+import tf.tuff.y0.Y0Plugin;
+
 public class TuffX extends JavaPlugin implements Listener, PluginMessageListener {
 
     private ServerRegistry serverRegistry;
 
+    private Y0Plugin y0Plugin;
+    
     @Override
     public void onLoad() {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
@@ -55,6 +59,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @Override
     public void onEnable() {
         PacketEvents.getAPI().init();
+
+        y0Plugin = new Y0Plugin(this);
 
         saveDefaultConfig();
         
@@ -91,7 +97,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
         if (!player.isOnline()) return;
       
-        if (channel.equals("eagler:below_y0") Y0Plugin.handlePacket(player,message):
+        if (channel.equals("eagler:below_y0") y0Plugin.handlePacket(player,message):
     }
   
     private void lfe() {
