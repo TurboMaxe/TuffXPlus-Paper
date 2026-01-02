@@ -1,0 +1,27 @@
+#debug mode
+debug-mode: false
+
+#worlds for y0 to be enabled in
+enabled-worlds:
+    - 'world'
+
+#the amount of threads for the chunk processor to use - using more threads processes chunks faster, but increases CPU usage
+#-1 is automatic
+chunk-processor-threads: -1
+
+#the size of the cache
+cache-size: 512
+#how long until the cache expires (minutes)
+cache-expiration: 5
+
+# Kick outdated clients that (generally) not compatible with this version of TuffX
+kick-outdated-clients: true
+
+# add server to tuffclient server discovery
+registry:
+    # Set to true to list your server on the discovery
+    enabled: false
+    # websocket url for the discovery server (i'll update it later)
+    server-url: 'ws://localhost:3000/ws'
+    # ip for ur eaglercraft server
+    server: 'wss://urserverip.net'
