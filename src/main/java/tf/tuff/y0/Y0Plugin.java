@@ -318,7 +318,7 @@ public void onPluginMessageReceived(String channel, org.bukkit.entity.Player pla
                     plugin.getLogger().severe("Payload creation failed for " + c.getX() + "," + c.getZ() + ": " + e.getMessage());
                 }
             }
-            plugin.cc.put(k, pp);
+            this.cc.put(k, pp);
             new BukkitRunnable() {
                 @Override
                 public void run() {
