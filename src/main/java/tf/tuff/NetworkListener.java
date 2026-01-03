@@ -12,7 +12,7 @@ public class NetworkListener implements PacketListener {
 
     private final TuffX plugin;
 
-    public ChunkPacketListener(TuffX plugin) {
+    public NetworkListener(TuffX plugin) {
         this.plugin = plugin;
     }
 

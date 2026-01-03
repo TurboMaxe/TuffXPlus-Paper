@@ -117,11 +117,11 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
         if (!player.isOnline()) return;
       
-        if (channel.equals("eagler:below_y0") y0Plugin.handlePacket(player,message);
+        if (channel.equals("eagler:below_y0")) y0Plugin.handlePacket(player,message);
         
-        if (channel.equals("viablocks:handshake") viaBlocksPlugin.handlePacket(player,mesaage);
+        if (channel.equals("viablocks:handshake")) viaBlocksPlugin.handlePacket(player,mesaage);
         
-        if (channel.equals("eagler:tuffactions") tuffActions.handlePacket(player,mesaage);
+        if (channel.equals("eagler:tuffactions")) tuffActions.handlePacket(player,mesaage);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -187,5 +187,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         getLogger().info("• llucasandersen (PacketEvents migration and async safety fixes)");
         getLogger().info("• Potato (optimizations)");
         getLogger().info("• coleis1op, if ts is driving me crazy, im taking credit");
+        getLogger().info("");
+        getLogger().info("");
+        getLogger().info("Overall plugin merges by Potato");
     }
 }
