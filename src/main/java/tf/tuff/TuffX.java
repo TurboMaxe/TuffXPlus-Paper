@@ -63,14 +63,15 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @Override
     public void onLoad() {
     
-    this.y0Plugin = new Y0Plugin(this);
-    this.viaBlocksPlugin = new ViaBlocksPlugin(this);
-    this.tuffActions = new TuffActions(this);
+        this.y0Plugin = new Y0Plugin(this);
+        this.viaBlocksPlugin = new ViaBlocksPlugin(this);
+        this.tuffActions = new TuffActions(this);
 
 
-    y0Plugin.onTuffXLoad();
-    tuffActions.onTuffXLoad();
-    viaBlocksPlugin.onTuffXLoad();
+        y0Plugin.onTuffXLoad();
+        tuffActions.onTuffXLoad();
+        viaBlocksPlugin.onTuffXLoad();
+        
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
                 .checkForUpdates(false)
@@ -83,8 +84,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         PacketEvents.getAPI().init();
 
         y0Plugin.onTuffXEnable();
-    tuffActions.onTuffXEnable();
-    viaBlocksPlugin.onTuffXEnable();
+        tuffActions.onTuffXEnable();
+        viaBlocksPlugin.onTuffXEnable();
 
         saveDefaultConfig();
         
@@ -110,8 +111,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @Override
     public void onDisable() {
         y0Plugin.onTuffXDisable();
-    viaBlocksPlugin.onTuffXDisable();
-    tuffActions.onTuffXDisable();
+        viaBlocksPlugin.onTuffXDisable();
+        tuffActions.onTuffXDisable();
         
         if (serverRegistry != null) {
             serverRegistry.disconnect();
@@ -142,25 +143,25 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.handlePlayerChangeWorld(e);
     }
     
-        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockForm(BlockFormEvent e) {
-    viaBlocksPlugin.blockListener.handleBlockForm(e);
-}
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+        public void onBlockForm(BlockFormEvent e) {
+        viaBlocksPlugin.blockListener.handleBlockForm(e);
+    }
     
-        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent e) {
-    viaBlocksPlugin.blockListener.handleBlockFade(e);
-}
+        viaBlocksPlugin.blockListener.handleBlockFade(e);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent e) {
         y0Plugin.handlePlayerJoin(e);
     }
     
-        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockGrow(BlockGrowEvent e) {
-viaBlocksPlugin.blockListener.handleBlockGrow(e);
-}
+        viaBlocksPlugin.blockListener.handleBlockGrow(e);
+    }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
@@ -169,25 +170,25 @@ viaBlocksPlugin.blockListener.handleBlockGrow(e);
         viaBlocksPlugin.blockListener.handlePlayerQuit(e);
     }
     
-        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockSpread(BlockSpreadEvent e) {
-    viaBlocksPlugin.blockListener.handleBlockSpread(e);
-}
+        viaBlocksPlugin.blockListener.handleBlockSpread(e);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent e) { 
-    viaBlocksPlugin.blockListener.handleBlockBreak(e);
+        viaBlocksPlugin.blockListener.handleBlockBreak(e);
         y0Plugin.handleBlockBreak(e);
     }
     
-        @EventHandler
+    @EventHandler
     public void onPlayerInventoryClick(InventoryClickEvent e) {
-    tuffActions.handlePlayerInventoryClick(e);
-}
+     tuffActions.handlePlayerInventoryClick(e);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent e) { 
-    viaBlocksPlugin.blockListener.handleBlockPlace(e);
+        viaBlocksPlugin.blockListener.handleBlockPlace(e);
         y0Plugin.handleBlockPlace(e);
     }
 
@@ -198,18 +199,18 @@ viaBlocksPlugin.blockListener.handleBlockGrow(e);
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChunkLoad(ChunkLoadEvent e) {
-            viaBlocksPlugin.blockListener.handleChunkLoad(e);
-}
+        viaBlocksPlugin.blockListener.handleChunkLoad(e);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent e) {
-    viaBlocksPlugin.blockListener.handleBlockExplode(e);
+        viaBlocksPlugin.blockListener.handleBlockExplode(e);
         y0Plugin.handleBlockExplode(e);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent e) {
-    viaBlocksPlugin.blockListener.handleBlockFromTo(e);
+        viaBlocksPlugin.blockListener.handleBlockFromTo(e);
         y0Plugin.handleBlockFromTo(e);
     }
   
