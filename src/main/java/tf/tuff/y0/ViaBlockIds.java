@@ -161,8 +161,26 @@ public class ViaBlockIds {
 
             for (int i = 0; i < s.size(); i++) {
                 String k = s.get(i).replace("minecraft:", "");
-                int[] l = ctl(i);
-                nlm.put(k, l);
+                String blockName = k.contains("[") ? k.substring(0, k.indexOf("[")) : k;
+                
+                int[] legacy;
+
+                switch (blockName) {
+                    case "chest":
+                        legacy = new int[]{54, 0};
+                        break;
+                    case "ender_chest":
+                        legacy = new int[]{130, 0};
+                        break;
+                    case "trapped_chest":
+                        legacy = new int[]{146, 0};
+                        break;
+                    default:
+                        legacy = ctl(i);
+                        break;
+                }
+                
+                nlm.put(k, legacy);
             }
 
             lm = nlm;
@@ -195,9 +213,29 @@ public class ViaBlockIds {
 
             lm = new Object2ObjectOpenHashMap<>();
             for (Map.Entry<String, List<Integer>> e : rm.entrySet()) {
+                String fullKey = e.getKey();
                 List<Integer> ll = e.getValue();
+                
                 if (ll != null && ll.size() == 2) {
-                    lm.put(e.getKey(), new int[]{ll.get(0), ll.get(1)});
+                    String blockName = fullKey.contains("[") ? fullKey.substring(0, fullKey.indexOf("[")) : fullKey;
+                    int[] finalId;
+                    
+                    switch (blockName) {
+                        case "chest":
+                            finalId = new int[]{54, 0};
+                            break;
+                        case "ender_chest":
+                            finalId = new int[]{130, 0};
+                            break;
+                        case "trapped_chest":
+                            finalId = new int[]{146, 0};
+                            break;
+                        default:
+                            finalId = new int[]{ll.get(0), ll.get(1)};
+                            break;
+                    }
+                    
+                    lm.put(fullKey, finalId);
                 }
             }
             Bukkit.getLogger().info("[TuffX] Loaded " + lm.size() + " legacy mappings.");
