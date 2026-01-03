@@ -1,3 +1,7 @@
+#  \\//  //\\
+#   ||  ||  ||
+#   ||   \\//
+
 #debug mode
 debug-mode: false
 
@@ -17,6 +21,10 @@ cache-expiration: 5
 # Kick outdated clients that (generally) not compatible with this version of TuffX
 kick-outdated-clients: true
 
+#  ||\\ ||== //_\\
+#  ||// ||== || __
+#  ||\\ ||== \\__/  
+
 # add server to tuffclient server discovery
 registry:
     # Set to true to list your server on the discovery
@@ -25,3 +33,28 @@ registry:
     server-url: 'ws://localhost:3000/ws'
     # ip for ur eaglercraft server
     server: 'wss://urserverip.net'
+    
+#\\    // ||\\
+# \\  //  ||<<
+#  \\//   ||//
+ 
+# Sync mode controls how often chunk and block updates are sent to clients.
+# normal: base speed for fast sync.
+# reduced: much slower updates to minimize client lag.
+sync-mode: normal
+
+# ====  //\\
+#  ||  //==\\
+#  || //    \\
+
+#1.13+ swimming
+swimming:
+  enabled: true
+
+#allows players to see blocking effect
+shield-mechanics:
+  enabled: true
+
+#allows players to see 1.13+ things in creative menu
+creative-items:
+  enabled: true

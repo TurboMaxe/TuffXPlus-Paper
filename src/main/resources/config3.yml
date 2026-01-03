@@ -1,0 +1,11 @@
+#1.13+ swimming
+swimming:
+  enabled: true
+
+#allows players to see blocking effect
+shield-mechanics:
+  enabled: true
+
+#allows players to see 1.13+ things in creative menu
+creative-items:
+  enabled: true

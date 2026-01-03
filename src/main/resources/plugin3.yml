@@ -1,0 +1,6 @@
+name: TuffActions
+version: 1.0.0
+main: net.potato.tuff.TuffActions
+api-version: '1.14'
+authors: [Potato, llucasandersen]
+description: Action stuff

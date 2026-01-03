@@ -1,0 +1,29 @@
+main: com.viablocks.viaBlocks.ViaBlocksPlugin
+
+name: ViaBlocks
+
+version: ${project.version}
+
+description: ${project.description}
+
+author: llucasandersen
+authors: [llucasandersen, coleis1op]
+
+commands:
+  viablocks:
+    description: Main command for ViaBlocks.
+    usage: /<command> <get|refresh>
+    permission: viablocks.command
+
+permissions:
+  viablocks.command:
+    description: Allows use of the /viablocks command.
+    default: op
+  viablocks.command.get:
+    description: Allows use of the /viablocks get subcommand.
+    default: op
+  viablocks.command.refresh:
+    description: Allows use of the /viablocks refresh subcommand.
+    default: op
+
+api-version: '1.13'
