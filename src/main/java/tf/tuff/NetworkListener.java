@@ -31,12 +31,7 @@ public class NetworkListener implements PacketListener {
 
             World world = player.getWorld();
             
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                if (player.isOnline() && world.isChunkLoaded(chunkX, chunkZ)) {
-                    Chunk chunk = world.getChunkAt(chunkX, chunkZ);
-                    plugin.processAndSendChunk(player, chunk);
-                }
-            });
+            plugin.y0Plugin.cpl.handleChunk(plugin, player, world, chunkX, chunkZ);
         }
     }
 }
