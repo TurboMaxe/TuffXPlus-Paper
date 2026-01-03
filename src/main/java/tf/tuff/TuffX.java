@@ -174,6 +174,17 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         getLogger().info("   ██║   ╚██████╔╝██║      ██║      ██╔╝╚██╗");
         getLogger().info("   ╚═╝    ╚═════╝ ╚═╝      ╚═╝      ╚═╝  ╚═╝");
         getLogger().info("");
+        getLogger().info("CREDITS");
+        getLogger().info("");
+        getLogger().info("Y0:");
         getLogger().info("Below y0 and TuffX programmed by Potato (@justatypicalpotato)");
+        getLogger().info("");
+        getLogger().info("TuffActions:");
+        getLogger().info("Swimming and creative items programmed by Potato (@justatypicalpotato)");
+        getLogger().info("");
+        getLogger().info("ViaBlocks:");
+        getLogger().info("• llucasandersen (PacketEvents migration and async safety fixes)");
+        getLogger().info("• Potato (optimizations)");
+        getLogger().info("• coleis1op, if ts is driving me crazy, im taking credit");
     }
 }

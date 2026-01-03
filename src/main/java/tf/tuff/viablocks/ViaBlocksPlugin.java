@@ -87,7 +87,6 @@ public final class ViaBlocksPlugin {
         }
 
         saveDefaultConfig();
-        this.showStartupLogo = getConfig().getBoolean("show-startup-logo", true);
         this.sendWelcomeBook = getConfig().getBoolean("send-welcome-book", true);
         loadSyncSettings();
         setupPlayerData();
