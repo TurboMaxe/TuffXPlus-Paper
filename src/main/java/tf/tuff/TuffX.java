@@ -56,6 +56,11 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @Override
     public void onLoad() {
     
+    this.y0Plugin = new Y0Plugin(this);
+    this.viaBlocksPlugin = new ViaBlocksPlugin(this);
+    this.tuffActions = new TuffActions(this);
+
+
     y0Plugin.onTuffXLoad();
     tuffActions.onTuffXLoad();
     viaBlocksPlugin.onTuffXLoad();
@@ -70,9 +75,9 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     public void onEnable() {
         PacketEvents.getAPI().init();
 
-        y0Plugin = new Y0Plugin(this);
-        viaBlocksPlugin = new ViaBlocksPlugin(this);
-        tuffActions = new TuffActions(this);
+        y0Plugin.onTuffXEnable();
+    tuffActions.onTuffXEnable();
+    viaBlocksPlugin.onTuffXEnable();
 
         saveDefaultConfig();
         
@@ -91,6 +96,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
                 serverRegistry.connect();
             }
         }
+        lfe();
     }
 
     

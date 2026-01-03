@@ -46,8 +46,6 @@ public class TuffActions implements Listener {
     
     public TuffActions(TuffX plugin){
         this.plugin = plugin;
-        
-        onTuffXEnable();
     }
 
     public void onTuffXEnable() {

@@ -101,7 +101,6 @@ public void onPluginMessageReceived(String channel, org.bukkit.entity.Player pla
 
     public Y0Plugin(TuffX plugin){
         this.plugin = plugin;
-        onTuffXEnable();
     }
     
     private void ld(String m) {
