@@ -41,6 +41,7 @@ import it.unimi.dsi.fastutil.bytes.*;
 
 import tf.tuff.y0.Y0Plugin;
 import tf.tuff.viablocks.ViaBlocksPlugin;
+import tf.tuff.tuffactions.TuffActions;
 
 public class TuffX extends JavaPlugin implements Listener, PluginMessageListener {
 
@@ -48,9 +49,14 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
 
     private Y0Plugin y0Plugin;
     private ViaBlocksPlugin viaBlocksPlugin;
+    private TuffActions tuffActions;
     
     @Override
     public void onLoad() {
+    
+    y0Plugin.onTuffXLoad();
+    tuffActions.onTuffXLoad();
+    viaBlocksPlugin.onTuffXLoad();
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
                 .checkForUpdates(false)
@@ -64,6 +70,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
 
         y0Plugin = new Y0Plugin(this);
         viaBlocksPlugin = new viaBlocksPlugin(this);
+        tuffActions = new TuffActions(this);
 
         saveDefaultConfig();
         
@@ -86,16 +93,12 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         }
     }
 
-    @Override
-    public void onLoad() {
-        y0Plugin.onTuffXLoad();
-        viaBlocksPlugin.onTuffXLoad();
-    }
     
     @Override
     public void onDisable() {
         y0Plugin.onTuffXDisable();
     viaBlocksPlugin.onTuffXDisable();
+    tuffActions.onTuffXDisable();
         
         if (serverRegistry != null) {
             serverRegistry.disconnect();
@@ -117,6 +120,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         if (channel.equals("eagler:below_y0") y0Plugin.handlePacket(player,message);
         
         if (channel.equals("viablocks:handshake") viaBlocksPlugin.handlePacket(player,mesaage);
+        
+        if (channel.equals("eagler:tuffactions") tuffActions.handlePacket(player,mesaage);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

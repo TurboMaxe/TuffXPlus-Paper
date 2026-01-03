@@ -107,11 +107,7 @@ public class Y0Plugin {
     public record WCK(String w, int x, int z) {}
 
     public void onTuffXLoad() {
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-        PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
-                .checkForUpdates(false)
-                .bStats(true);
-        PacketEvents.getAPI().load();
+        
     }
 
     public void onTuffXEnable() {

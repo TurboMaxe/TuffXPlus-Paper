@@ -5,7 +5,6 @@ import com.github.retrooper.packetevents.event.PacketListenerCommon;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPluginMessage;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import tf.tuff.tuffactions.creative.CreativeMenu;
-import tf.tuff.tuffactions.network.TuffPacketListener;
 import tf.tuff.tuffactions.swimming.Swimming;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -24,7 +23,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-public class TuffActions extends JavaPlugin implements Listener {
+import tf.tuff.TuffX;
+
+public class TuffActions {
 
     public static final String CHANNEL = "eagler:tuffactions";
 
@@ -34,11 +35,12 @@ public class TuffActions extends JavaPlugin implements Listener {
 
     public static boolean swimmingEnabled = false;
     public static boolean creativeEnabled = false;
+    
+    public TuffX plugin;
 
     public static final Set<UUID> tuffPlayers = ConcurrentHashMap.newKeySet();
 
-    @Override
-    public void onLoad() {
+    public void onTuffXLoad() {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings()
                 .reEncodeByDefault(false)
@@ -46,9 +48,14 @@ public class TuffActions extends JavaPlugin implements Listener {
                 .bStats(false);
         PacketEvents.getAPI().load();
     }
+    
+    public TuffActions(TuffX plugin){
+        this.plugin = plugin;
+        
+        onTuffXEnable();
+    }
 
-    @Override
-    public void onEnable() {
+    public void onTuffXEnable() {
         saveDefaultConfig();
         getLogger().info("TuffActions has been enabled");
         getLogger().info("Enabling features...");
@@ -60,7 +67,6 @@ public class TuffActions extends JavaPlugin implements Listener {
         if (creativeEnabled) getLogger().info("Creative items enabled.");
 
         PacketEvents.getAPI().init();
-        packetListener = PacketEvents.getAPI().getEventManager().registerListener(new TuffPacketListener(this));
 
         this.swimmingManager = new Swimming(this);
         this.creativeManager = new CreativeMenu(this);
@@ -70,15 +76,14 @@ public class TuffActions extends JavaPlugin implements Listener {
         logEnable();
     }
 
-    @Override
-    public void onDisable() {
+    public void onTuffXDisable() {
         if (packetListener != null) {
             PacketEvents.getAPI().getEventManager().unregisterListener(packetListener);
         }
         PacketEvents.getAPI().terminate();
     }
 
-    public void handlePluginMessage(Player player, byte[] message) {
+    public void handlePacket(Player player, byte[] message) {
         if (player == null || message == null || message.length < 13) {
             return;
         }

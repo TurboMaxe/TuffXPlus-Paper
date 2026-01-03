@@ -65,8 +65,7 @@ public final class ViaBlocksPlugin {
     }   
 
     public void onTuffXLoad() {
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-        PacketEvents.getAPI().load();
+        
     }
 
     public void onTuffXEnable() {
