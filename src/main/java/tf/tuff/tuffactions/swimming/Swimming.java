@@ -64,13 +64,13 @@ public class Swimming {
             
             plugin.sendPluginMessage(recipient, bout.toByteArray());
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to send swim state to " + recipient.getName(), e);
+            plugin.plugin.getLogger().log(Level.WARNING, "Failed to send swim state to " + recipient.getName(), e);
         }
     }
 
     public void handleSwimReady(Player player) {
         Player newPlayer = player;
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, () -> {
             for (UUID swimmingPlayerId : swimmingPlayers) {
                 Player swimmingPlayer = Bukkit.getPlayer(swimmingPlayerId);
                 if (swimmingPlayer != null && swimmingPlayer.isOnline()) {

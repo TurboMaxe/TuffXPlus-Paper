@@ -110,7 +110,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        viaBlocksPlugin.onTuffXCommand(sender, command, label, args);
+        return viaBlocksPlugin.onTuffXCommand(sender, command, label, args);
     }
 
     @Override

@@ -25,7 +25,7 @@ import java.util.logging.Level;
 
 import tf.tuff.TuffX;
 
-public class TuffActions {
+public class TuffActions implements Listener {
 
     public static final String CHANNEL = "eagler:tuffactions";
 

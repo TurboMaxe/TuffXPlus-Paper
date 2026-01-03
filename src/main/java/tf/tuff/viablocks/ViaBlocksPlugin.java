@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class ViaBlocksPlugin {
+public final class ViaBlocksPlugin implements Listener, PluginMessageListener, CommandExecutor {
 
     public static final String CLIENTBOUND_CHANNEL = "viablocks:data";
     public static final String SERVERBOUND_CHANNEL = "viablocks:handshake";

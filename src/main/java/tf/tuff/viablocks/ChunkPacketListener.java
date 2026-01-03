@@ -26,17 +26,12 @@ public class ChunkPacketListener {
 
     public void handleChunk(TuffX plugin, Player player, World world, int chunkX, int chunkZ){
     plugin.getServer().getScheduler().runTask(plugin, () -> {
-            Player livePlayer = plugin.getServer().getPlayer(playerId);
-            if (livePlayer == null || !livePlayer.isOnline()) {
+            if (!plugin.isPlayerEnabled(player)) {
                 return;
             }
-            if (!plugin.isPlayerEnabled(livePlayer)) {
-                return;
-            }
-            World world = livePlayer.getWorld();
             if (world.isChunkLoaded(chunkX, chunkZ)) {
                 Chunk chunk = world.getChunkAt(chunkX, chunkZ);
-                plugin.getBlockListener().processChunkForSinglePlayer(chunk, livePlayer);
+                plugin.getBlockListener().processChunkForSinglePlayer(chunk, player);
             }
         });
     }

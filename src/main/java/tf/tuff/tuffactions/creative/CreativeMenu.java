@@ -56,7 +56,7 @@ public class CreativeMenu {
             
             plugin.sendPluginMessage(player, bout.toByteArray());
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to send creative items to " + player.getName(), e);
+            plugin.plugin.getLogger().log(Level.WARNING, "Failed to send creative items to " + player.getName(), e);
         }
     }
 

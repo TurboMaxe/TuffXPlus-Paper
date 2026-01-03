@@ -41,7 +41,7 @@ import it.unimi.dsi.fastutil.bytes.*;
 
 import tf.tuff.TuffX;
 
-public class Y0Plugin {
+public class Y0Plugin implements Listener, PluginMessageListener {
 
     public static final String CH = "eagler:below_y0";
     public ViaBlockIds v;
