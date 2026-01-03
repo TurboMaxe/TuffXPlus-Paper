@@ -3,7 +3,9 @@ name: Gradle Build
 on:
   push:
     branches: [ "main" ]
-  pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,15 +14,31 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: jdk
+      - name: setup
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: permission
+      - name: permissions
         run: chmod +x gradlew
 
-      - name: Run Gradle
+      - name: build
         run: ./gradlew build
+
+      - name: copy jar to builds
+        run: |
+          mkdir -p builds
+          cp build/libs/TuffX.jar builds/TuffX.jar
+
+      - name: push jar
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add builds/TuffX.jar
+          git commit -m "Update build artifact"
+          git push
