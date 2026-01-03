@@ -1,6 +1,6 @@
-package net.potato.tuff.swimming; 
+package tf.tuff.tuffactions.swimming; 
 
-import net.potato.tuff.TuffActions;
+import tf.tuff.tuffactions.TuffActions;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

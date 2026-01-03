@@ -1,12 +1,12 @@
-package net.potato.tuff;
+package tf.tuff.tuffactions;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerCommon;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPluginMessage;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
-import net.potato.tuff.creative.CreativeMenu;
-import net.potato.tuff.network.TuffPacketListener;
-import net.potato.tuff.swimming.Swimming;
+import tf.tuff.tuffactions.creative.CreativeMenu;
+import tf.tuff.tuffactions.network.TuffPacketListener;
+import tf.tuff.tuffactions.swimming.Swimming;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

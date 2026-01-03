@@ -1,4 +1,4 @@
-package com.viablocks.viaBlocks.version;
+package tf.tuff.viablocks.version;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;

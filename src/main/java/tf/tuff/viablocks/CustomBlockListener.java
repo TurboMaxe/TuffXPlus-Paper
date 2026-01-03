@@ -1,8 +1,8 @@
-package com.viablocks.viaBlocks;
+package tf.tuff.viablocks;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import com.viablocks.viaBlocks.version.VersionAdapter;
+import tf.tuff.viablocks.version.VersionAdapter;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;

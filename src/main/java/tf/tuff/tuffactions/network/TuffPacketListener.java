@@ -1,10 +1,10 @@
-package net.potato.tuff.network;
+package tf.tuff.tuffactions.network;
 
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPluginMessage;
-import net.potato.tuff.TuffActions;
+import tf.tuff.tuffactions.TuffActions;
 import org.bukkit.entity.Player;
 
 public class TuffPacketListener extends PacketListenerAbstract {

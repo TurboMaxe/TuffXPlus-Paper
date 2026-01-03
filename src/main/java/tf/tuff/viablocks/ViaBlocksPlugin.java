@@ -1,10 +1,10 @@
-package com.viablocks.viaBlocks;
+package tf.tuff.viablocks;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.google.common.io.ByteStreams;
-import com.viablocks.viaBlocks.version.VersionAdapter;
-import com.viablocks.viaBlocks.version.legacy.LegacyAdapter;
-import com.viablocks.viaBlocks.version.modern.ModernAdapter;
+import tf.tuff.viablocks.version.VersionAdapter;
+import tf.tuff.viablocks.version.legacy.LegacyAdapter;
+import tf.tuff.viablocks.version.modern.ModernAdapter;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;

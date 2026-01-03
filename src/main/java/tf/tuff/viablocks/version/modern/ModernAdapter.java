@@ -1,6 +1,6 @@
-package com.viablocks.viaBlocks.version.modern;
+package tf.tuff.viablocks.version.modern;
 
-import com.viablocks.viaBlocks.version.VersionAdapter;
+import tf.tuff.viablocks.version.VersionAdapter;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;

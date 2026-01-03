@@ -1,4 +1,4 @@
-package com.viablocks.viaBlocks;
+package tf.tuff.viablocks;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;

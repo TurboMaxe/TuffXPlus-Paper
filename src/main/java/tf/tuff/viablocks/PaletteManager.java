@@ -1,6 +1,6 @@
-package com.viablocks.viaBlocks;
+package tf.tuff.viablocks;
 
-import com.viablocks.viaBlocks.version.VersionAdapter;
+import tf.tuff.viablocks.version.VersionAdapter;
 import org.bukkit.Material;
 
 import java.util.ArrayList;

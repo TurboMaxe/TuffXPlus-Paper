@@ -1,4 +1,4 @@
-package com.viablocks.viaBlocks;
+package tf.tuff.viablocks;
 
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;

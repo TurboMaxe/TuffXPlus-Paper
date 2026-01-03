@@ -1,4 +1,4 @@
-package net.potato.tuff.creative;
+package tf.tuff.tuffactions.creative;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

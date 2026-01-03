@@ -1,6 +1,6 @@
-package net.potato.tuff.creative;
+package tf.tuff.tuffactions.creative;
 
-import net.potato.tuff.TuffActions;
+import tf.tuff.tuffactions.TuffActions;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
