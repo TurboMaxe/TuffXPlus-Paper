@@ -122,7 +122,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         PacketEvents.getAPI().terminate();
     }
     
-    public boolean reloadTuffX(){
+    public void reloadTuffX(){
         this.onDisable();
         this.onEnable();
     }
