@@ -123,12 +123,12 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     }
     
     public boolean reloadTuffX(){
-        this.disable();
-        this.enable();
+        this.onDisable();
+        this.onEnable();
     }
     
     public boolean TuffXCommand(CommandSender sender, Command command, String label, String[] args){
-        if (!sender instanceof Player) {
+        if (!(sender instanceof Player)) {
             reloadTuffX();
             return true;
         } else {
@@ -139,7 +139,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
                         player.sendMessage("§cYou do not have permission to use this command."); 
                         return true; 
                     } 
-                    reload();
+                    reloadTuffX();
                     return true; 
                 } 
             } 
