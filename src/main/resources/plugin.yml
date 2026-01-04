@@ -9,16 +9,22 @@ depend: [ViaVersion, ViaBackwards]
 commands:
     viablocks:
         description: Main command for ViaBlocks.
-        usage: /<command> <get|refresh>
+        usage: /viablocks <get|refresh>
         permission: viablocks.command
+    tuffx:
+        description: Main command for TuffX.
+        usage: /tuffx <reload>
 
 permissions:
-    viablocks.command:
+    tuffx.reload:
+        description: Allows use of the /tuffx reload subcommand.
+        default: op
+    tuffx.viablocks.command:
         description: Allows use of the /viablocks command.
         default: op
-    viablocks.command.get:
+    tuffx.viablocks.command.get:
         description: Allows use of the /viablocks get subcommand.
         default: op
-    viablocks.command.refresh:
+    tuffx.viablocks.command.refresh:
         description: Allows use of the /viablocks refresh subcommand.
-        default: op
+        default: op 
