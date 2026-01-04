@@ -107,6 +107,35 @@ public class Y0Plugin {
     public void onTuffXLoad() {
         
     }
+    
+    public void onTuffXReload() {
+        d = plugin.getConfig().getBoolean("y0.debug-mode", false);
+        ObjectArrayList<String> ewList = new ObjectArrayList<>(plugin.getConfig().getStringList("y0.enabled-worlds"));
+        ew = new ObjectOpenHashSet<>(ewList.size());
+        if (plugin.getConfig().getBoolean("y0.y0-enabled", false)) ew.addAll(ewList);
+    
+        cc = CacheBuilder.newBuilder()
+            .maximumSize(plugin.getConfig().getInt("y0.cache-size", 1024))
+            .expireAfterAccess(plugin.getConfig().getInt("y0.cache-expiration", 5), TimeUnit.MINUTES)
+            .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+            .initialCapacity(256)
+            .build();
+            
+        int ct = plugin.getConfig().getInt("y0.chunk-processor-threads", -1);
+        int tc;
+        if (ct <= 0) {
+            tc = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        } else {
+            tc = ct;
+        }
+        
+        cp = Executors.newFixedThreadPool(tc, r -> {
+            Thread t = new Thread(r, "TuffX-Chunk-" + System.nanoTime());
+            t.setDaemon(true);
+            t.setPriority(Thread.NORM_PRIORITY + 1);
+            return t;
+        }); 
+    }
 
     public void onTuffXEnable() {
         PacketEvents.getAPI().init();

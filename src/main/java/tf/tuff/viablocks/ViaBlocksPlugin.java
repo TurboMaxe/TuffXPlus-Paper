@@ -69,6 +69,10 @@ public final class ViaBlocksPlugin {
     public void onTuffXLoad() {
         
     }
+    
+    public void onTuffXReload() {
+        loadSyncSettings();
+    }
 
     public void onTuffXEnable() {
         instance = this;

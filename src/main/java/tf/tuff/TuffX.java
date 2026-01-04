@@ -123,8 +123,10 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     }
     
     public void reloadTuffX(){
-        this.onDisable();
-        this.onEnable();
+        viaBlocksPlugin.onTuffXReload();
+        y0Plugin.onTuffXReload();
+        tuffActions.onTuffXReload(); 
+        getLogger().info("TuffX reloaded.");
     }
     
     public boolean TuffXCommand(CommandSender sender, Command command, String label, String[] args){
@@ -132,6 +134,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
             if (args[0].equalsIgnoreCase("reload")) { 
                 if (!(sender instanceof Player)) {
                     reloadTuffX();
+                    player.sendMessage("TuffX reloaded."); 
                     return true;
                 } else {
                     Player player = (Player) sender;

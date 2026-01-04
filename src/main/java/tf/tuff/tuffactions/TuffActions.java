@@ -44,6 +44,11 @@ public class TuffActions {
        
     }
     
+    public void onTuffXReload() {
+        swimmingEnabled = plugin.getConfig().getBoolean("swimming.enabled", true);
+        creativeEnabled = plugin.getConfig().getBoolean("creative-items.enabled", true);
+    }
+    
     public TuffActions(TuffX plugin){
         this.plugin = plugin;
     }
