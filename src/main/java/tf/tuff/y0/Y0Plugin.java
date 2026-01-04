@@ -115,7 +115,7 @@ public class Y0Plugin {
         d = plugin.getConfig().getBoolean("debug-mode", false);
         ObjectArrayList<String> ewList = new ObjectArrayList<>(plugin.getConfig().getStringList("enabled-worlds"));
         ew = new ObjectOpenHashSet<>(ewList.size());
-        ew.addAll(ewList);
+        if (plugin.getConfig().getBoolean("y0-enabled", false)) ew.addAll(ewList);
 
         this.cpl = new ChunkPacketListener(this);
 

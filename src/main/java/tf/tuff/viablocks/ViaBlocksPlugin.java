@@ -169,7 +169,7 @@ public final class ViaBlocksPlugin {
         if (player == null) return false; return viaBlocksEnabledPlayers.contains(player.getUniqueId());
     }
     public void setPlayerEnabled(Player player, boolean enabled) {
-        if (enabled) { viaBlocksEnabledPlayers.add(player.getUniqueId()); } else { viaBlocksEnabledPlayers.remove(player.getUniqueId()); }
+        if (enabled && plugin.getConfig().getBoolean("viablocks-enabled", false)) { viaBlocksEnabledPlayers.add(player.getUniqueId()); } else { viaBlocksEnabledPlayers.remove(player.getUniqueId()); }
     }
     public CustomBlockListener getBlockListener() { return this.blockListener; }
 

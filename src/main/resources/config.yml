@@ -2,6 +2,9 @@
 #   ||  ||  ||
 #   ||   \\//
 
+#if t0 is enabled or not
+y0-enabled: true
+
 #debug mode
 debug-mode: false
 
@@ -42,6 +45,8 @@ registry:
 # Set to true to send a welcome book to players with the ViaBlocks client when they join for the first time.
 # This book can explain the feature and provide a link for bug reports.
 send-welcome-book: false
+
+viablocks-enabled: true
 
 # Set to true to enable detailed logging in the server console for debugging.
 debug: false
