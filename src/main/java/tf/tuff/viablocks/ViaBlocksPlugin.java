@@ -75,7 +75,29 @@ public final class ViaBlocksPlugin {
     }
     
     public void onTuffXReload() {
+        this.sendWelcomeBook = plugin.getConfig().getBoolean("viablocks.send-welcome-book", true);
+        
         loadSyncSettings();
+
+        if (chunkExecutor != null) {
+            chunkExecutor.shutdownNow();
+        }
+        this.chunkExecutor = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
+
+        if (chunkSenderManager != null) {
+            chunkSenderManager.updateSettings(this.chunkSendIntervalTicks, this.chunksPerTick);
+        }
+
+        if (playerDataFile == null) {
+            playerDataFile = new File(plugin.getDataFolder(), "players.yml");
+        }
+        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
+        
+        if (blockListener != null) {
+            blockListener.clearCache();
+        }
+        
+        plugin.getLogger().info("ViaBlocks reloaded.");
     }
 
     public void onTuffXEnable() {

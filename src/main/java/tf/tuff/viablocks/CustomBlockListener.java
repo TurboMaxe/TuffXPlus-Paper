@@ -295,6 +295,12 @@ public class CustomBlockListener {
     public boolean isModernMaterial(Material material) {
         return this.modernMaterials.contains(material);
     }
+
+    public void clearCache() {
+        blockDataIdCache.clear();
+        pendingUpdates.clear();
+        pendingFlush.clear();
+    }
     
     private void runSync(Runnable task) { plugin.plugin.getServer().getScheduler().runTask(plugin.plugin, task); }
     private void runSyncLater(Runnable task, long delay) { plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, task, delay); }

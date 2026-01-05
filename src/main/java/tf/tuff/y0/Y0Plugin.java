@@ -110,10 +110,14 @@ public class Y0Plugin {
     
     public void onTuffXReload() {
         d = plugin.getConfig().getBoolean("y0.debug-mode", false);
+        
         ObjectArrayList<String> ewList = new ObjectArrayList<>(plugin.getConfig().getStringList("y0.enabled-worlds"));
         ew = new ObjectOpenHashSet<>(ewList.size());
         if (plugin.getConfig().getBoolean("y0.y0-enabled", false)) ew.addAll(ewList);
     
+        if (cc != null) {
+            cc.invalidateAll();
+        }
         cc = CacheBuilder.newBuilder()
             .maximumSize(plugin.getConfig().getInt("y0.cache-size", 1024))
             .expireAfterAccess(plugin.getConfig().getInt("y0.cache-expiration", 5), TimeUnit.MINUTES)
@@ -121,6 +125,10 @@ public class Y0Plugin {
             .initialCapacity(256)
             .build();
             
+        if (cp != null) {
+            cp.shutdownNow(); 
+        }
+        
         int ct = plugin.getConfig().getInt("y0.chunk-processor-threads", -1);
         int tc;
         if (ct <= 0) {
@@ -135,6 +143,8 @@ public class Y0Plugin {
             t.setPriority(Thread.NORM_PRIORITY + 1);
             return t;
         }); 
+        
+        plugin.getLogger().info("Y0 reloaded.");
     }
 
     public void onTuffXEnable() {

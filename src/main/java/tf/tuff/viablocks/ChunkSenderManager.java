@@ -15,8 +15,8 @@ public class ChunkSenderManager {
     private final ViaBlocksPlugin plugin;
     private final Map<UUID, Queue<Chunk>> playerChunkQueues = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitRunnable> playerTasks = new ConcurrentHashMap<>();
-    private final long intervalTicks;
-    private final int chunksPerTick;
+    private long intervalTicks;
+    private int chunksPerTick;
 
     public ChunkSenderManager(ViaBlocksPlugin plugin, long intervalTicks, int chunksPerTick) {
         this.plugin = plugin;
@@ -30,6 +30,18 @@ public class ChunkSenderManager {
         queue.addAll(chunks);
         startTaskForPlayer(player);
     }
+
+    public void updateSettings(long intervalTicks, int chunksPerTick) {
+        this.intervalTicks = Math.max(1L, intervalTicks);
+        this.chunksPerTick = Math.max(1, chunksPerTick);
+        
+        for (UUID playerId : playerTasks.keySet()) {
+             cancelTask(playerId);
+             Player p = plugin.plugin.getServer().getPlayer(playerId);
+             if (p != null) startTaskForPlayer(p);
+        }
+    }
+
 
     public void addChunkToQueue(Player player, Chunk chunk) {
         if (!plugin.isPlayerEnabled(player)) return;
@@ -90,7 +102,6 @@ public class ChunkSenderManager {
             } catch (IllegalStateException e) {
             }
         }
-        playerChunkQueues.remove(playerId);
     }
 
     public void onPlayerQuit(Player player) {
