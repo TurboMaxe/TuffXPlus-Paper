@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class ViaBlocksPlugin {
 
@@ -58,6 +60,8 @@ public final class ViaBlocksPlugin {
     private long chunkSendIntervalTicks = 1L;
     private int chunksPerTick = 1;
 
+    public ExecutorService chunkExecutor;
+
     public boolean isPaper = false;
     
     public TuffX plugin;
@@ -76,6 +80,9 @@ public final class ViaBlocksPlugin {
 
     public void onTuffXEnable() {
         instance = this;
+
+        this.chunkExecutor = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
+
         if (!setupVersionAdapter()) {
             plugin.getLogger().severe("Could not detect server version. This plugin may not work correctly.");
             this.versionAdapter = new LegacyAdapter();
@@ -150,7 +157,15 @@ public final class ViaBlocksPlugin {
     }
 
     public void onTuffXDisable(){
-    plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, CLIENTBOUND_CHANNEL); plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, SERVERBOUND_CHANNEL); plugin.getLogger().info("ViaBlocks has been disabled.");
+        plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, CLIENTBOUND_CHANNEL); 
+        plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, SERVERBOUND_CHANNEL); 
+
+        if (chunkExecutor != null) {
+            chunkExecutor.shutdownNow();
+            chunkExecutor = null;
+        }
+
+        plugin.getLogger().info("ViaBlocks has been disabled.");
     }
     private void setupPlayerData() {
         playerDataFile = new File(plugin.getDataFolder(), "players.yml"); if (!playerDataFile.exists()) { try { playerDataFile.createNewFile(); } catch (IOException e) { plugin.getLogger().severe("Could not create players.yml!"); e.printStackTrace(); } } playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);

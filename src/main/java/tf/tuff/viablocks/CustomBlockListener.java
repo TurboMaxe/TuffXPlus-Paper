@@ -123,15 +123,17 @@ public class CustomBlockListener {
         int minHeight = getMinHeight(world);
         int maxHeight = world.getMaxHeight();
         
-        runAsync(() -> {
+        plugin.chunkExecutor.submit(() -> {
             Map<Integer, List<Long>> foundBlocks = findModernBlocksInChunk(snapshot, minHeight, maxHeight);
             if (!foundBlocks.isEmpty()) {
                 byte[] packetData = buildChunkPacket(foundBlocks);
-                runSync(() -> {
-                    if (player.isOnline()) {
-                        player.sendPluginMessage(plugin.plugin, ViaBlocksPlugin.CLIENTBOUND_CHANNEL, packetData);
-                    }
-                });
+                if (plugin.plugin.isEnabled()) {
+                    runSync(() -> {
+                        if (player.isOnline()) {
+                            player.sendPluginMessage(plugin.plugin, ViaBlocksPlugin.CLIENTBOUND_CHANNEL, packetData);
+                        }
+                    });
+                }
             }
         });
     }
@@ -294,7 +296,6 @@ public class CustomBlockListener {
         return this.modernMaterials.contains(material);
     }
     
-    private void runAsync(Runnable task) { plugin.plugin.getServer().getScheduler().runTaskAsynchronously(plugin.plugin, task); } 
     private void runSync(Runnable task) { plugin.plugin.getServer().getScheduler().runTask(plugin.plugin, task); }
     private void runSyncLater(Runnable task, long delay) { plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, task, delay); }
 
