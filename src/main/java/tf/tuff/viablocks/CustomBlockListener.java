@@ -125,6 +125,8 @@ public class CustomBlockListener {
         int maxHeight = world.getMaxHeight();
         
         plugin.chunkExecutor.submit(() -> {
+            if (!plugin.plugin.isEnabled()) return;
+
             Map<Integer, List<Long>> foundBlocks = findModernBlocksInChunk(snapshot, minHeight, maxHeight);
             if (!foundBlocks.isEmpty()) {
                 byte[] packetData = buildChunkPacket(foundBlocks);
@@ -307,8 +309,21 @@ public class CustomBlockListener {
         pendingFlush.clear();
     }
     
-    private void runSync(Runnable task) { plugin.plugin.getServer().getScheduler().runTask(plugin.plugin, task); }
-    private void runSyncLater(Runnable task, long delay) { plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, task, delay); }
+    private void runSync(Runnable task) { 
+        if (!plugin.plugin.isEnabled()) return;
+        try {
+            plugin.plugin.getServer().getScheduler().runTask(plugin.plugin, task); 
+        } catch (Exception e) {
+        }
+    }
+
+    private void runSyncLater(Runnable task, long delay) { 
+        if (!plugin.plugin.isEnabled()) return;
+        try {
+            plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, task, delay); 
+        } catch (Exception e) {
+        }
+    }
 
     private int getMinHeight(World world) {
         return worldMinHeights.computeIfAbsent(world.getName(), k -> {

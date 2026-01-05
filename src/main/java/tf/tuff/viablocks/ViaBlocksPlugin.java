@@ -187,6 +187,10 @@ public final class ViaBlocksPlugin {
             chunkExecutor = null;
         }
 
+        if (cpl != null) {
+            cpl.stop();
+        }
+
         plugin.getLogger().info("ViaBlocks has been disabled.");
     }
     private void setupPlayerData() {
