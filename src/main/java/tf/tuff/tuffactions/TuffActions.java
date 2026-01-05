@@ -70,6 +70,9 @@ public class TuffActions {
         this.creativeManager = new CreativeMenu(this);
         plugin.getLogger().info("Finished enabling features.");
         logEnable();
+
+        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "eagler:tuffactions");
+        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, "eagler:tuffactions", plugin);
     }
 
     public void onTuffXDisable() {
