@@ -17,24 +17,39 @@ public class ChunkDataHandler extends ChannelOutboundHandlerAdapter {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
-            if (buf.readableBytes() < 2) {
-                super.write(ctx, msg, promise);
-                return;
-            }
-
             buf.markReaderIndex();
-            try {
-                int packetLength = read(buf);
-                int packetId = read(buf);   
 
-                if (packetId == 0x20 || packetId == 0x27) { 
+            try {
+                int originalLength = readVarInt(buf); 
+                int lengthFieldSize = buf.readerIndex(); // How many bytes the length VarInt took
+                int packetId = readVarInt(buf);
+
+                if (packetId == 0x20 || packetId == 0x27) {
                     int chunkX = buf.readInt();
                     int chunkZ = buf.readInt();
-                    
-                    blockListener.plugin.plugin.getLogger().info("DEBUG: Found Chunk Packet at " + chunkX + "," + chunkZ);
+
+                    byte[] customData = blockListener.getCachedChunkData(chunkX, chunkZ);
+                    if (customData != null && customData.length > 0) {
+                        
+                        int bodyLength = buf.readableBytes() + (buf.readerIndex() - lengthFieldSize) + customData.length;
+                        
+                        ByteBuf newPacket = ctx.alloc().buffer();
+                        
+                        writeVarInt(newPacket, bodyLength);
+                        
+                        buf.resetReaderIndex();
+                        readVarInt(buf); 
+                        newPacket.writeBytes(buf);
+                        
+
+                        newPacket.writeBytes(customData);
+
+                        buf.release();
+                        ctx.write(newPacket, promise);
+                        return;
+                    }
                 }
             } catch (Exception e) {
-
             } finally {
                 buf.resetReaderIndex();
             }
@@ -42,7 +57,15 @@ public class ChunkDataHandler extends ChannelOutboundHandlerAdapter {
         super.write(ctx, msg, promise);
     }
 
-    private int read(ByteBuf buf) {
+    private void writeVarInt(ByteBuf buf, int value) {
+        while ((value & -128) != 0) {
+            buf.writeByte(value & 127 | 128);
+            value >>>= 7;
+        }
+        buf.writeByte(value);
+    }
+
+    private int readVarInt(ByteBuf buf) {
         int numRead = 0;
         int result = 0;
         byte read;
