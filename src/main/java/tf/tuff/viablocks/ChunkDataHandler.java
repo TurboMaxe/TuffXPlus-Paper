@@ -17,59 +17,26 @@ public class ChunkDataHandler extends ChannelOutboundHandlerAdapter {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
-            
-            if (buf.readableBytes() < 5) {
+            if (buf.readableBytes() < 2) {
                 super.write(ctx, msg, promise);
                 return;
             }
 
             buf.markReaderIndex();
-            boolean isChunkPacket = false;
-            int skipCount = 0;
-
             try {
-                int firstVarInt = read(buf);
+                int packetLength = read(buf);
+                int packetId = read(buf);   
 
-                if (firstVarInt == 0x20) {
-                    isChunkPacket = true;
-                    skipCount = 1; 
-                } 
-                else if (firstVarInt > 0x7F && buf.readableBytes() > 1) { 
-                    int secondVarInt = read(buf);
-                    
-                    if (secondVarInt == 0x20) {
-                        isChunkPacket = true;
-                        skipCount = 2; 
-                    }
-                }
-            } catch (Exception e) {
-            }
-
-            buf.resetReaderIndex();
-
-            if (isChunkPacket) {
-                try {
-                    for (int i = 0; i < skipCount; i++) read(buf);
-
+                if (packetId == 0x20 || packetId == 0x27) { 
                     int chunkX = buf.readInt();
                     int chunkZ = buf.readInt();
                     
-                    buf.resetReaderIndex(); 
-
-                    byte[] customData = blockListener.getCachedChunkData(chunkX, chunkZ);
-                    if (customData != null && customData.length > 0) {
-                        blockListener.plugin.plugin.getLogger().info("DEBUG: [FOUND] Chunk " + chunkX + "," + chunkZ + " | Injecting custom data!");
-                        
-                        ByteBuf newPacket = ctx.alloc().buffer(buf.readableBytes() + customData.length);
-                        newPacket.writeBytes(buf);
-                        newPacket.writeBytes(customData);
-                        buf.release();
-                        ctx.write(newPacket, promise);
-                        return;
-                    }
-                } catch (Exception e) {
-                    buf.resetReaderIndex();
+                    blockListener.plugin.plugin.getLogger().info("DEBUG: Found Chunk Packet at " + chunkX + "," + chunkZ);
                 }
+            } catch (Exception e) {
+
+            } finally {
+                buf.resetReaderIndex();
             }
         }
         super.write(ctx, msg, promise);
