@@ -18,41 +18,35 @@ public class ChunkDataHandler extends ChannelOutboundHandlerAdapter {
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
             buf.markReaderIndex();
-
+            
             try {
-                int originalLength = readVarInt(buf); 
-                int lengthFieldSize = buf.readerIndex(); // How many bytes the length VarInt took
                 int packetId = readVarInt(buf);
+                
+                StringBuilder hex = new StringBuilder();
+                int bytesToRead = Math.min(buf.readableBytes(), 32);
+                for (int i = 0; i < bytesToRead; i++) {
+                    hex.append(String.format("%02X ", buf.getByte(buf.readerIndex() + i)));
+                }
+
+                blockListener.plugin.plugin.getLogger().info(
+                    String.format("DEBUG | ID: 0x%02X | Readable: %d | Hex: %s", 
+                    packetId, buf.readableBytes(), hex.toString())
+                );
 
                 if (packetId == 0x20 || packetId == 0x27) {
-                    int chunkX = buf.readInt();
-                    int chunkZ = buf.readInt();
-
-                    byte[] customData = blockListener.getCachedChunkData(chunkX, chunkZ);
-                    if (customData != null && customData.length > 0) {
-                        
-                        int bodyLength = buf.readableBytes() + (buf.readerIndex() - lengthFieldSize) + customData.length;
-                        
-                        ByteBuf newPacket = ctx.alloc().buffer();
-                        
-                        writeVarInt(newPacket, bodyLength);
-                        
-                        buf.resetReaderIndex();
-                        readVarInt(buf); 
-                        newPacket.writeBytes(buf);
-                        
-
-                        newPacket.writeBytes(customData);
-
-                        buf.release();
-                        ctx.write(newPacket, promise);
-                        return;
+                    if (buf.readableBytes() >= 8) {
+                        int x = buf.readInt();
+                        int z = buf.readInt();
+                        blockListener.plugin.plugin.getLogger().info("CHUNK FOUND AT: " + x + ", " + z);
                     }
                 }
             } catch (Exception e) {
+                blockListener.plugin.plugin.getLogger().warning("Failed to parse packet: " + e.getMessage());
             } finally {
                 buf.resetReaderIndex();
             }
+        } else {
+            blockListener.plugin.plugin.getLogger().info("Non-ByteBuf Msg: " + msg.getClass().getName());
         }
         super.write(ctx, msg, promise);
     }
