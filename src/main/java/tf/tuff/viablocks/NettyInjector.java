@@ -28,7 +28,7 @@ public class NettyInjector {
             }
 
             if (channel.pipeline().get("via-encoder") != null) {
-                channel.pipeline().addAfter(
+                channel.pipeline().addBefore(
                     "via-encoder", 
                     "viablocks_chunk_handler", 
                     new ChunkDataHandler(blockListener)
