@@ -31,7 +31,7 @@ public class NettyInjector {
                 channel.pipeline().addBefore(
                     "via-encoder", 
                     "viablocks_chunk_handler", 
-                    new ChunkDataHandler(blockListener)
+                    new ChunkDataHandler(blockListener, player)
                 );
             } else {
                 blockListener.plugin.plugin.getLogger().info("Failed to find via-encoder! This plugin may not work correctly.");

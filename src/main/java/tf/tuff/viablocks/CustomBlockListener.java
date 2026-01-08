@@ -140,16 +140,17 @@ public class CustomBlockListener {
         int minHeight = getMinHeight(chunk.getWorld());
         int maxHeight = chunk.getWorld().getMaxHeight();
         
-        // --- CHANGE: RUN DIRECTLY (SYNC) INSTEAD OF EXECUTOR ---
-        // plugin.chunkExecutor.submit(() -> { 
-            Map<Integer, List<Long>> foundBlocks = findModernBlocksInChunk(snapshot, minHeight, maxHeight);
-            if (foundBlocks.isEmpty()) {
-                chunkPacketCache.put(key, EMPTY_PACKET);
-            } else {
-                chunkPacketCache.put(key, buildChunkPacket(foundBlocks));
-            }
-        // });
-        // -------------------------------------------------------
+        Map<Integer, List<Long>> foundBlocks = findModernBlocksInChunk(snapshot, minHeight, maxHeight);
+        if (foundBlocks.isEmpty()) {
+            chunkPacketCache.put(key, EMPTY_PACKET);
+        } else {
+            chunkPacketCache.put(key, buildChunkPacket(foundBlocks));
+        }
+    }
+
+    public byte[] getExtraDataForChunk(String worldName, int x, int z) {
+        String key = worldName + "_" + x + "_" + z;
+        return chunkPacketCache.getIfPresent(key);
     }
 
     private Map<Integer, List<Long>> findModernBlocksInChunk(ChunkSnapshot chunkSnapshot, int minHeight, int maxHeight) {
