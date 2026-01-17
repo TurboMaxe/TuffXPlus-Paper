@@ -48,9 +48,9 @@ public class Y0Plugin {
     
     private final ObjectOpenHashSet<UUID> aib = new ObjectOpenHashSet<>();
     private ObjectOpenHashSet<String> ew;
-    private Cache<WCK, ObjectArrayList<byte[]>> cc;
+    private volatile Cache<WCK, ObjectArrayList<byte[]>> cc;
     private boolean d;
-    private ExecutorService cp;
+    private volatile ExecutorService cp;
 
     private final ThreadLocal<Object2ObjectOpenHashMap<BlockData, int[]>> tlcc = ThreadLocal.withInitial(() -> new Object2ObjectOpenHashMap<>(256));
     private final ThreadLocal<ShortArrayList> tlba = ThreadLocal.withInitial(() -> new ShortArrayList(4096));
@@ -128,7 +128,15 @@ public class Y0Plugin {
             .build();
             
         if (cp != null) {
-            cp.shutdownNow(); 
+            cp.shutdown();
+            try {
+                if (!cp.awaitTermination(5, TimeUnit.SECONDS)) {
+                    cp.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                cp.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
         
         int ct = plugin.getConfig().getInt("y0.chunk-processor-threads", -1);
@@ -324,7 +332,12 @@ public class Y0Plugin {
     }
 
     public void processAndSendChunk(final Player p, final Chunk c) {
-        if (c == null || p == null || !p.isOnline() || cp == null || cp.isShutdown()) {
+        if (c == null || p == null || !p.isOnline()) {
+            return;
+        }
+
+        ExecutorService executor = cp;
+        if (executor == null || executor.isShutdown()) {
             return;
         }
 
@@ -344,8 +357,8 @@ public class Y0Plugin {
         }
         
         final ChunkSnapshot snapshot = c.getChunkSnapshot(false, false, false);
-        
-        cp.submit(() -> {
+
+        executor.submit(() -> {
             final ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
             final Object2ObjectOpenHashMap<BlockData, int[]> cvt = tlcc.get();
             cvt.clear(); 

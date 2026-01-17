@@ -62,10 +62,10 @@ public class CustomBlockListener {
     private static final double UPDATE_RADIUS_SQUARED = 6400;
     private static final byte[] EMPTY_PACKET = new byte[0];
     
-    private final Map<BlockData, Integer> blockDataIdCache = new ConcurrentHashMap<>();
+    private final Cache<BlockData, Integer> blockDataIdCache;
     private final Cache<String, byte[]> chunkPacketCache;
 
-    private final Map<Long, Integer> recentModernChanges = new ConcurrentHashMap<>();
+    private final Cache<Long, Integer> recentModernChanges;
 
     private record ChunkKey(String world, int x, int z) {}
 
@@ -75,9 +75,17 @@ public class CustomBlockListener {
         this.paletteManager = paletteManager;
         this.modernMaterials = versionAdapter.getModernMaterials();
         this.nettyInjector = new NettyInjector(this);
+        this.blockDataIdCache = CacheBuilder.newBuilder()
+            .maximumSize(8000)
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .build();
         this.chunkPacketCache = CacheBuilder.newBuilder()
-            .maximumSize(4096) 
+            .maximumSize(4096)
             .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build();
+        this.recentModernChanges = CacheBuilder.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
             .build();
     }
 
@@ -133,10 +141,11 @@ public class CustomBlockListener {
 
     public void handlePlayerQuit(PlayerQuitEvent event) {
         nettyInjector.eject(event.getPlayer());
-        
+
         UUID playerId = event.getPlayer().getUniqueId();
         pendingUpdates.remove(playerId);
         pendingFlush.remove(playerId);
+        plugin.viaBlocksEnabledPlayers.remove(playerId);
         plugin.setPlayerEnabled(event.getPlayer(), false);
     }
 
@@ -198,9 +207,14 @@ public class CustomBlockListener {
                     
                     BlockData data = chunkSnapshot.getBlockData(x, y, z);
                     
-                    int materialId = blockDataIdCache.computeIfAbsent(data, key -> {
-                        return this.paletteManager.getOrCreateId(key.getAsString());
-                    });
+                    Integer cachedId = blockDataIdCache.getIfPresent(data);
+                    int materialId;
+                    if (cachedId != null) {
+                        materialId = cachedId;
+                    } else {
+                        materialId = this.paletteManager.getOrCreateId(data.getAsString());
+                        blockDataIdCache.put(data, materialId);
+                    }
 
                     if (materialId != -1) {
                         long packedLocation = packLocation(chunkX + x, y, chunkZ + z);
@@ -330,14 +344,14 @@ public class CustomBlockListener {
             int id = getMaterialId(after);
             recentModernChanges.put(packed, id);
         } else {
-            recentModernChanges.remove(packed);
+            recentModernChanges.invalidate(packed);
         }
 
         invalidateChunkCache(location.getChunk());
     }
 
     public Integer getRecentChange(long packed) {
-        return recentModernChanges.get(packed);
+        return recentModernChanges.getIfPresent(packed);
     }
 
     private boolean isFeatureEnabled() {
@@ -348,9 +362,14 @@ public class CustomBlockListener {
         if (data == null || location.getWorld() == null) {
             return;
         }
-        int stateId = blockDataIdCache.computeIfAbsent(data, key -> {
-            return this.paletteManager.getOrCreateId(key.getAsString());
-        });
+        Integer cachedId = blockDataIdCache.getIfPresent(data);
+        int stateId;
+        if (cachedId != null) {
+            stateId = cachedId;
+        } else {
+            stateId = this.paletteManager.getOrCreateId(data.getAsString());
+            blockDataIdCache.put(data, stateId);
+        }
         if (stateId == -1) {
             return;
         }
@@ -411,9 +430,13 @@ public class CustomBlockListener {
     }
 
     private int getMaterialId(BlockData data) {
-        return blockDataIdCache.computeIfAbsent(data, key -> 
-            this.paletteManager.getOrCreateId(key.getAsString())
-        );
+        Integer cachedId = blockDataIdCache.getIfPresent(data);
+        if (cachedId != null) {
+            return cachedId;
+        }
+        int id = this.paletteManager.getOrCreateId(data.getAsString());
+        blockDataIdCache.put(data, id);
+        return id;
     }
     
     private byte[] buildChunkPacket(Map<Integer, List<Long>> blockData) {
@@ -446,10 +469,11 @@ public class CustomBlockListener {
     }
 
     public void clearCache() {
-        blockDataIdCache.clear();
+        blockDataIdCache.invalidateAll();
         pendingUpdates.clear();
         pendingFlush.clear();
         chunkPacketCache.invalidateAll();
+        recentModernChanges.invalidateAll();
     }
     
     private void runSync(Runnable task) { 
