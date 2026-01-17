@@ -60,7 +60,6 @@ public class Y0Plugin {
     private TuffX plugin;
     
     private static final int[] EMPTY_LEGACY = {1, 0};
-    private static final int RESEND_CHUNKS_PER_TICK = 20;
 
     private static final Map<BlockData, Integer> emissionCache = new ConcurrentHashMap<>();
     private static Method getLightEmissionMethod;
@@ -272,47 +271,24 @@ public class Y0Plugin {
     }
 
     public void resendChunksInView(Player p) {
-        if (p == null || !p.isOnline()) {
-            return;
-        }
         World world = p.getWorld();
         int viewDistance = p.getClientViewDistance();
         int playerChunkX = p.getLocation().getChunk().getX();
         int playerChunkZ = p.getLocation().getChunk().getZ();
-        int minX = playerChunkX - viewDistance;
-        int maxX = playerChunkX + viewDistance;
-        int minZ = playerChunkZ - viewDistance;
-        int maxZ = playerChunkZ + viewDistance;
 
-        new BukkitRunnable() {
-            int x = minX;
-            int z = minZ;
-
-            @Override
-            public void run() {
-                if (!p.isOnline() || p.getWorld() != world) {
-                    cancel();
-                    return;
-                }
-                int processed = 0;
-                while (processed < RESEND_CHUNKS_PER_TICK) {
-                    if (x > maxX) {
-                        cancel();
-                        return;
-                    }
-                    if (world.isChunkLoaded(x, z)) {
-                        Chunk chunk = world.getChunkAt(x, z);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            for (int x = -viewDistance; x <= viewDistance; x++) {
+                for (int z = -viewDistance; z <= viewDistance; z++) {
+                    int currentChunkX = playerChunkX + x;
+                    int currentChunkZ = playerChunkZ + z;
+                    
+                    if (world.isChunkLoaded(currentChunkX, currentChunkZ)) {
+                        Chunk chunk = world.getChunkAt(currentChunkX, currentChunkZ);
                         processAndSendChunk(p, chunk);
                     }
-                    z++;
-                    if (z > maxZ) {
-                        z = minZ;
-                        x++;
-                    }
-                    processed++;
                 }
             }
-        }.runTask(plugin);
+        });
     }
 
     private byte[] cby0sp(boolean s) {
