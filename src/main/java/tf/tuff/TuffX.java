@@ -51,6 +51,7 @@ import it.unimi.dsi.fastutil.bytes.*;
 import tf.tuff.y0.Y0Plugin;
 import tf.tuff.viablocks.ViaBlocksPlugin;
 import tf.tuff.tuffactions.TuffActions;
+import tf.tuff.viasounds.ViaSoundsPlugin;
 
 public class TuffX extends JavaPlugin implements Listener, PluginMessageListener, CommandExecutor {
 
@@ -59,6 +60,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     public Y0Plugin y0Plugin;
     public ViaBlocksPlugin viaBlocksPlugin;
     public TuffActions tuffActions;
+    public ViaSoundsPlugin viaSoundsPlugin;
     
     @Override
     public void onLoad() {
@@ -66,11 +68,12 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         this.y0Plugin = new Y0Plugin(this);
         this.viaBlocksPlugin = new ViaBlocksPlugin(this);
         this.tuffActions = new TuffActions(this);
-
+        this.viaSoundsPlugin = new ViaSoundsPlugin(this);
 
         y0Plugin.onTuffXLoad();
         tuffActions.onTuffXLoad();
         viaBlocksPlugin.onTuffXLoad();
+        viaSoundsPlugin.onTuffXLoad();
         
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
@@ -86,6 +89,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.onTuffXEnable();
         tuffActions.onTuffXEnable();
         viaBlocksPlugin.onTuffXEnable();
+        viaSoundsPlugin.onTuffXEnable();
 
         saveDefaultConfig();
         
@@ -116,6 +120,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.onTuffXDisable();
         viaBlocksPlugin.onTuffXDisable();
         tuffActions.onTuffXDisable();
+        viaSoundsPlugin.onTuffXDisable();
         
         if (serverRegistry != null) {
             serverRegistry.disconnect();
@@ -138,7 +143,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
 
         viaBlocksPlugin.onTuffXReload();
         y0Plugin.onTuffXReload();
-        tuffActions.onTuffXReload(); 
+        tuffActions.onTuffXReload();
+        viaSoundsPlugin.onTuffXReload(); 
         
         getLogger().info("TuffX reloaded.");
     }
@@ -172,12 +178,14 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
         if (!player.isOnline()) return;
-      
+
         if (channel.equals("eagler:below_y0")) y0Plugin.handlePacket(player,message);
-        
+
         if (channel.equals("viablocks:handshake")) viaBlocksPlugin.handlePacket(player,message);
-        
+
         if (channel.equals("eagler:tuffactions")) tuffActions.handlePacket(player,message);
+
+        if (channel.equals("viasounds:handshake")) viaSoundsPlugin.handlePacket(player,message);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -210,6 +218,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.handlePlayerQuit(e);
         tuffActions.handlePlayerQuit(e);
         viaBlocksPlugin.blockListener.handlePlayerQuit(e);
+        viaSoundsPlugin.handlePlayerQuit(e);
     }
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -276,10 +285,13 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         getLogger().info("• llucasandersen (Complex client models and texture fixes,");
         getLogger().info("      optimizations, PacketEvents migration and async safety fixes)");
         getLogger().info("• coleis1op, if ts is driving me crazy, im taking credit");
+        getLogger().info("ViaSounds:");
+        getLogger().info("• 1.13+ Sounds (client + plugin) programmed by syntaxsavy");
+        getLogger().info("");
         getLogger().info("Other:");
         getLogger().info("• Swimming and creative items programmed by Potato (@justatypicalpotato)");
         getLogger().info("• shaded build, 1.14+ support (before merge) - llucasandersen");
         getLogger().info("• Overall plugin merges by Potato");
-        getLogger().info("update v3");
+        getLogger().info("update v4");
     }
 }

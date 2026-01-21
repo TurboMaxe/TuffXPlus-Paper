@@ -55,6 +55,20 @@ viablocks:
   # normal: base speed for fast sync.
   # reduced: much slower updates to minimize client lag.
   sync-mode: normal
+
+
+#\\    // <>   //\\   //= //=\\ ||  || ||\\ || ||\\   //=
+# \\  //  ||  //==\\ ||  ||   || ||  || ||// || ||//  \\
+#  \\//   || //    \\  \\= \\=//  \\==// ||   || ||   =//
+
+viasounds:
+  viasounds-enabled: true
+
+  #Debug
+  debug: false
+
+  # Max distance sounds can be sent (-1 = default)
+  max-distance: -1
   
 
 # //=\\ ==== ||  || ||== ||\\
