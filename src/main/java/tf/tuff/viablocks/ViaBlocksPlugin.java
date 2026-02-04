@@ -1,31 +1,24 @@
 package tf.tuff.viablocks;
 
-import com.github.retrooper.packetevents.PacketEvents;
-import com.google.common.io.ByteStreams;
 import tf.tuff.viablocks.version.VersionAdapter;
 import tf.tuff.viablocks.version.legacy.LegacyAdapter;
 import tf.tuff.viablocks.version.modern.ModernAdapter;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.bukkit.event.Listener;
 import tf.tuff.TuffX;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,14 +42,12 @@ public final class ViaBlocksPlugin {
 
     private File playerDataFile;
     private FileConfiguration playerDataConfig;
+    private final Set<UUID> joinedPlayersCache = new HashSet<>();
     private boolean sendWelcomeBook;
-    private boolean showStartupLogo;
     public VersionAdapter versionAdapter;
 
     public PaletteManager paletteManager;
     private long updateBatchDelayTicks = 1L;
-    private long chunkSendIntervalTicks = 1L;
-    private int chunksPerTick = 1;
 
     public ExecutorService chunkExecutor;
 
@@ -69,7 +60,6 @@ public final class ViaBlocksPlugin {
     }   
 
     public void onTuffXLoad() {
-        
     }
     
     public void onTuffXReload() {
@@ -153,19 +143,26 @@ public final class ViaBlocksPlugin {
         if (mode == null) {
             mode = "normal";
         }
-        if (mode.equalsIgnoreCase("reduced")) {
-            this.updateBatchDelayTicks = 10L;
-            this.chunkSendIntervalTicks = 10L;
-            this.chunksPerTick = 1;
-        } else {
-            this.updateBatchDelayTicks = 1L;
-            this.chunkSendIntervalTicks = 1L;
-            this.chunksPerTick = 1;
-        }
+        this.updateBatchDelayTicks = mode.equalsIgnoreCase("reduced") ? 10L : 1L;
     }
 
     private boolean setupVersionAdapter() {
-        try { Pattern pattern = Pattern.compile("1\\.(\\d{1,2})"); Matcher matcher = pattern.matcher(Bukkit.getBukkitVersion()); if (matcher.find()) { int minorVersion = Integer.parseInt(matcher.group(1)); if (minorVersion >= 13) { this.versionAdapter = new ModernAdapter(); } else { this.versionAdapter = new LegacyAdapter(); } return true; } } catch (Exception e) { e.printStackTrace(); } return false;
+        try {
+            Pattern pattern = Pattern.compile("1\\.(\\d{1,2})");
+            Matcher matcher = pattern.matcher(Bukkit.getBukkitVersion());
+            if (matcher.find()) {
+                int minorVersion = Integer.parseInt(matcher.group(1));
+                if (minorVersion >= 13) {
+                    this.versionAdapter = new ModernAdapter();
+                } else {
+                    this.versionAdapter = new LegacyAdapter();
+                }
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public void onTuffXDisable(){
@@ -180,33 +177,126 @@ public final class ViaBlocksPlugin {
         plugin.getLogger().info("ViaBlocks has been disabled.");
     }
     private void setupPlayerData() {
-        playerDataFile = new File(plugin.getDataFolder(), "players.yml"); if (!playerDataFile.exists()) { try { playerDataFile.createNewFile(); } catch (IOException e) { plugin.getLogger().severe("Could not create players.yml!"); e.printStackTrace(); } } playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
+        playerDataFile = new File(plugin.getDataFolder(), "players.yml");
+        if (!playerDataFile.exists()) {
+            try {
+                playerDataFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not create players.yml!");
+                e.printStackTrace();
+            }
+        }
+        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
+        joinedPlayersCache.clear();
+        for (String uuidStr : playerDataConfig.getStringList("joined-players")) {
+            try {
+                joinedPlayersCache.add(UUID.fromString(uuidStr));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
     }
     public boolean hasPlayerJoinedBefore(Player player) {
-        return playerDataConfig.getStringList("joined-players").contains(player.getUniqueId().toString());
+        return joinedPlayersCache.contains(player.getUniqueId());
     }
     public boolean isFirstJoin(Player player) {
         return !hasPlayerJoinedBefore(player);
     }
     public void markPlayerAsJoined(Player player) {
-        List<String> joinedPlayers = playerDataConfig.getStringList("joined-players"); if (!joinedPlayers.contains(player.getUniqueId().toString())) { joinedPlayers.add(player.getUniqueId().toString()); playerDataConfig.set("joined-players", joinedPlayers); try { playerDataConfig.save(playerDataFile); } catch (IOException e) { plugin.getLogger().severe("Could not save to players.yml!"); e.printStackTrace(); } }
+        UUID uuid = player.getUniqueId();
+        if (joinedPlayersCache.add(uuid)) {
+            List<String> joinedPlayers = playerDataConfig.getStringList("joined-players");
+            joinedPlayers.add(uuid.toString());
+            playerDataConfig.set("joined-players", joinedPlayers);
+            try {
+                playerDataConfig.save(playerDataFile);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not save to players.yml!");
+                e.printStackTrace();
+            }
+        }
     }
     public void sendWelcomeGui(Player player) {
         if (!this.sendWelcomeBook) return;
-        ItemStack book = new ItemStack(Material.WRITTEN_BOOK); BookMeta meta = (BookMeta) book.getItemMeta(); if (meta == null) return; meta.setTitle("ViaBlocks Information"); meta.setAuthor("ViaBlocks"); TextComponent welcome = new TextComponent("Welcome to ViaBlocks!"); welcome.setColor(ChatColor.DARK_AQUA); welcome.setBold(true); TextComponent body = new TextComponent("\n\nThis feature is in active development!\n\nIf you find any visual bugs or issues, please report them on our "); body.setColor(ChatColor.BLACK); TextComponent link = new TextComponent("bug tracker"); link.setColor(ChatColor.BLUE); link.setUnderlined(true); link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/TuffNetwork/ViaIssuesBlocks/issues")); link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open the bug tracker!").color(ChatColor.GRAY).create())); TextComponent disclaimer = new TextComponent("\n\n(Bamboo and kelp are noted.)"); disclaimer.setColor(ChatColor.DARK_GRAY); disclaimer.setItalic(true); meta.spigot().addPage(new ComponentBuilder("").append(welcome).append(body).append(link).append(new TextComponent(".")).append(disclaimer).create()); book.setItemMeta(meta); plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
+        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+        BookMeta meta = (BookMeta) book.getItemMeta();
+        if (meta == null) return;
+        meta.setTitle("ViaBlocks Information");
+        meta.setAuthor("ViaBlocks");
+        TextComponent welcome = new TextComponent("Welcome to ViaBlocks!");
+        welcome.setColor(ChatColor.DARK_AQUA);
+        welcome.setBold(true);
+        TextComponent body = new TextComponent("\n\nThis feature is in active development!\n\nIf you find any visual bugs or issues, please report them on our ");
+        body.setColor(ChatColor.BLACK);
+        TextComponent link = new TextComponent("bug tracker");
+        link.setColor(ChatColor.BLUE);
+        link.setUnderlined(true);
+        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/TuffNetwork/ViaIssuesBlocks/issues"));
+        link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open the bug tracker!").color(ChatColor.GRAY).create()));
+        TextComponent disclaimer = new TextComponent("\n\n(Bamboo and kelp are noted.)");
+        disclaimer.setColor(ChatColor.DARK_GRAY);
+        disclaimer.setItalic(true);
+        meta.spigot().addPage(new ComponentBuilder("").append(welcome).append(body).append(link).append(new TextComponent(".")).append(disclaimer).create());
+        book.setItemMeta(meta);
+        plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
     }   
     
     public boolean isPlayerEnabled(Player player) {
-        if (player == null) return false; return viaBlocksEnabledPlayers.contains(player.getUniqueId());
+        if (player == null) return false;
+        return viaBlocksEnabledPlayers.contains(player.getUniqueId());
     }
+
     public void setPlayerEnabled(Player player, boolean enabled) {
-        if (enabled && plugin.getConfig().getBoolean("viablocks.viablocks-enabled", false)) { viaBlocksEnabledPlayers.add(player.getUniqueId()); } else { viaBlocksEnabledPlayers.remove(player.getUniqueId()); }
+        if (enabled && plugin.getConfig().getBoolean("viablocks.viablocks-enabled", false)) {
+            viaBlocksEnabledPlayers.add(player.getUniqueId());
+        } else {
+            viaBlocksEnabledPlayers.remove(player.getUniqueId());
+        }
     }
-    public CustomBlockListener getBlockListener() { return this.blockListener; }
+
+    public CustomBlockListener getBlockListener() {
+        return this.blockListener;
+    }
 
     public boolean onTuffXCommand(CommandSender sender, Command command, String label, String[] args) {
-        //if (!(sender instanceof Player)) { sender.sendMessage("This command can only be executed by a player."); return true; } Player player = (Player) sender; if (args.length > 0) { if (args[0].equalsIgnoreCase("get")) { if (!player.hasPermission("tuffx.viablocks.command.get")) { player.sendMessage("Â§cYou do not have permission to use this command."); return true; } this.versionAdapter.giveCustomBlocks(player); player.sendMessage("Â§aYou have been given a set of custom blocks."); return true; } else if (args[0].equalsIgnoreCase("refresh")) { if (!player.hasPermission("tuffx.viablocks.command.refresh")) { player.sendMessage("Â§cYou do not have permission to use this command."); return true; } player.sendMessage("Â§aRefreshing modern blocks in your view distance..."); World world = player.getWorld(); int viewDistance = this.versionAdapter.getClientViewDistance(player); int playerChunkX = player.getLocation().getChunk().getX(); int playerChunkZ = player.getLocation().getChunk().getZ(); for (int x = -viewDistance; x <= viewDistance; x++) { for (int z = -viewDistance; z <= viewDistance; z++) { int chunkX = playerChunkX + x; int chunkZ = playerChunkZ + z; if (world.isChunkLoaded(chunkX, chunkZ)) { blockListener.processChunkForSinglePlayer(world.getChunkAt(chunkX, chunkZ), player); } } } player.sendMessage("Â§aRefresh complete!"); return true; } } player.sendMessage("Â§cInvalid usage. Use: /viablocks <get|refresh>"); return true;
-        return false;
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("This command can only be executed by a player.");
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length > 0) {
+            if (args[0].equalsIgnoreCase("get")) {
+                if (!player.hasPermission("tuffx.viablocks.command.get")) {
+                    player.sendMessage("\u00A7cYou do not have permission to use this command.");
+                    return true;
+                }
+                this.versionAdapter.giveCustomBlocks(player);
+                player.sendMessage("\u00A7aYou have been given a set of custom blocks.");
+                return true;
+            } else if (args[0].equalsIgnoreCase("refresh")) {
+                if (!player.hasPermission("tuffx.viablocks.command.refresh")) {
+                    player.sendMessage("\u00A7cYou do not have permission to use this command.");
+                    return true;
+                }
+                player.sendMessage("\u00A7aRefreshing modern blocks in your view distance...");
+                World world = player.getWorld();
+                int viewDistance = this.versionAdapter.getClientViewDistance(player);
+                int playerChunkX = player.getLocation().getChunk().getX();
+                int playerChunkZ = player.getLocation().getChunk().getZ();
+                for (int x = -viewDistance; x <= viewDistance; x++) {
+                    for (int z = -viewDistance; z <= viewDistance; z++) {
+                        int chunkX = playerChunkX + x;
+                        int chunkZ = playerChunkZ + z;
+                        if (world.isChunkLoaded(chunkX, chunkZ)) {
+                            blockListener.processChunkForSinglePlayer(world.getChunkAt(chunkX, chunkZ), player);
+                        }
+                    }
+                }
+                player.sendMessage("\u00A7aRefresh complete!");
+                return true;
+            }
+        }
+        player.sendMessage("\u00A7cInvalid usage. Use: /viablocks <get|refresh>");
+        return true;
     }
 }
 

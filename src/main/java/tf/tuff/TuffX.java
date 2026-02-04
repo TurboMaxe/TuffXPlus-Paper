@@ -52,6 +52,7 @@ import tf.tuff.y0.Y0Plugin;
 import tf.tuff.viablocks.ViaBlocksPlugin;
 import tf.tuff.tuffactions.TuffActions;
 import tf.tuff.viasounds.ViaSoundsPlugin;
+import tf.tuff.netty.ChunkInjector;
 
 public class TuffX extends JavaPlugin implements Listener, PluginMessageListener, CommandExecutor {
 
@@ -61,6 +62,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     public ViaBlocksPlugin viaBlocksPlugin;
     public TuffActions tuffActions;
     public ViaSoundsPlugin viaSoundsPlugin;
+    private ChunkInjector chunkInjector;
     
     @Override
     public void onLoad() {
@@ -90,6 +92,10 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         tuffActions.onTuffXEnable();
         viaBlocksPlugin.onTuffXEnable();
         viaSoundsPlugin.onTuffXEnable();
+
+        chunkInjector = new ChunkInjector(viaBlocksPlugin.blockListener, y0Plugin);
+        viaBlocksPlugin.blockListener.setChunkInjector(chunkInjector);
+        y0Plugin.setChunkInjector(chunkInjector);
 
         saveDefaultConfig();
         
@@ -181,7 +187,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
 
         if (channel.equals("eagler:below_y0")) y0Plugin.handlePacket(player,message);
 
-        if (channel.equals("viablocks:handshake")) viaBlocksPlugin.handlePacket(player,message);
+        if (channel.equals("viablocks:handshake2")) viaBlocksPlugin.handlePacket(player,message);
 
         if (channel.equals("eagler:tuffactions")) tuffActions.handlePacket(player,message);
 
@@ -193,12 +199,12 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.handlePlayerChangeWorld(e);
     }
     
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-        public void onBlockForm(BlockFormEvent e) {
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockForm(BlockFormEvent e) {
         viaBlocksPlugin.blockListener.handleBlockForm(e);
     }
-    
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent e) {
         viaBlocksPlugin.blockListener.handleBlockFade(e);
     }
@@ -208,7 +214,7 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         y0Plugin.handlePlayerJoin(e);
     }
     
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockGrow(BlockGrowEvent e) {
         viaBlocksPlugin.blockListener.handleBlockGrow(e);
     }
@@ -221,13 +227,13 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         viaSoundsPlugin.handlePlayerQuit(e);
     }
     
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockSpread(BlockSpreadEvent e) {
         viaBlocksPlugin.blockListener.handleBlockSpread(e);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent e) { 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent e) {
         viaBlocksPlugin.blockListener.handleBlockBreak(e);
         y0Plugin.handleBlockBreak(e);
     }
@@ -237,8 +243,8 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
      tuffActions.handlePlayerInventoryClick(e);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent e) { 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent e) {
         viaBlocksPlugin.blockListener.handleBlockPlace(e);
         y0Plugin.handleBlockPlace(e);
     }
@@ -246,20 +252,22 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPhysics(BlockPhysicsEvent e) {
         y0Plugin.handleBlockPhysics(e);
+        viaBlocksPlugin.blockListener.handleBlockPhysics(e);
     }
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChunkLoad(ChunkLoadEvent e) {
+        y0Plugin.handleChunkLoad(e);
         viaBlocksPlugin.blockListener.handleChunkLoad(e);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent e) {
         viaBlocksPlugin.blockListener.handleBlockExplode(e);
         y0Plugin.handleBlockExplode(e);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent e) {
         viaBlocksPlugin.blockListener.handleBlockFromTo(e);
         y0Plugin.handleBlockFromTo(e);

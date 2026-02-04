@@ -19,6 +19,7 @@ public class PaletteManager {
 
     private final CopyOnWriteArrayList<String> palette = new CopyOnWriteArrayList<>();
     private final Map<String, Integer> stateToIdMap = new ConcurrentHashMap<>();
+    private volatile List<String> paletteSnapshot;
 
     public PaletteManager(VersionAdapter versionAdapter, Logger logger) {
         generate(versionAdapter, logger);
@@ -69,6 +70,7 @@ public class PaletteManager {
         }
 
         palette.addAll(initialPalette);
+        paletteSnapshot = new ArrayList<>(palette);
         logger.info("Palette initialized with " + palette.size() + " entries.");
     }
 
@@ -76,17 +78,6 @@ public class PaletteManager {
         if (!stateToIdMap.containsKey(state)) {
             stateToIdMap.put(state, localPalette.size());
             localPalette.add(state);
-        }
-    }
-
-    private void addEntry(String state) {
-        if (!stateToIdMap.containsKey(state)) {
-            synchronized (this) {
-                if (!stateToIdMap.containsKey(state)) {
-                     stateToIdMap.put(state, palette.size());
-                     palette.add(state);
-                }
-            }
         }
     }
 
@@ -99,11 +90,12 @@ public class PaletteManager {
         synchronized (this) {
              id = stateToIdMap.get(state);
              if (id != null) return id;
-             
+
              int newId = palette.size();
              palette.add(state);
              stateToIdMap.put(state, newId);
-             
+             paletteSnapshot = null;
+
              broadcastNewPaletteEntry(state);
              return newId;
         }
@@ -136,6 +128,11 @@ public class PaletteManager {
     }
 
     public synchronized List<String> getPalette() {
-        return new ArrayList<>(palette);
+        List<String> snapshot = paletteSnapshot;
+        if (snapshot == null) {
+            snapshot = new ArrayList<>(palette);
+            paletteSnapshot = snapshot;
+        }
+        return snapshot;
     }
 }

@@ -1,8 +1,6 @@
 package tf.tuff.y0;
 
 import com.github.retrooper.packetevents.PacketEvents;
-import com.github.retrooper.packetevents.event.PacketListenerPriority;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
@@ -11,17 +9,9 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
@@ -38,6 +28,7 @@ import java.lang.reflect.Method;
 import it.unimi.dsi.fastutil.objects.*;
 import it.unimi.dsi.fastutil.shorts.*;
 import it.unimi.dsi.fastutil.bytes.*;
+import java.util.function.Consumer;
 
 import tf.tuff.TuffX;
 
@@ -65,7 +56,8 @@ public class Y0Plugin {
     private static Method getLightEmissionMethod;
 
     public ChunkPacketListener cpl;
-    
+    private tf.tuff.netty.ChunkInjector chunkInjector;
+
     static {
         try {
             getLightEmissionMethod = BlockData.class.getMethod("getLightEmission");
@@ -236,6 +228,10 @@ public class Y0Plugin {
         return aib.contains(p.getUniqueId());
     }
 
+    public void setChunkInjector(tf.tuff.netty.ChunkInjector injector) {
+        this.chunkInjector = injector;
+    }
+
     public void handlePacket(Player p, byte[] m) {
         try (DataInputStream i = new DataInputStream(new ByteArrayInputStream(m))) {
             int x = i.readInt();
@@ -263,6 +259,10 @@ public class Y0Plugin {
                 aib.add(p.getUniqueId());
                 if (ew.contains(p.getWorld().getName())) {
                     aib.add(p.getUniqueId());
+                    preCacheVisibleChunks(p);
+                    if (chunkInjector != null) {
+                        chunkInjector.inject(p);
+                    }
                     p.sendPluginMessage(plugin, CH, cby0sp(true));
                     resendChunksInView(p);
                 } else {
@@ -278,25 +278,89 @@ public class Y0Plugin {
         }
     }
 
+    private void preCacheVisibleChunks(Player p) {
+        World world = p.getWorld();
+        int viewDistance = p.getClientViewDistance();
+        int playerChunkX = p.getLocation().getChunk().getX();
+        int playerChunkZ = p.getLocation().getChunk().getZ();
+
+        Object2ObjectOpenHashMap<BlockData, int[]> cvt = new Object2ObjectOpenHashMap<>(256);
+
+        for (int x = -viewDistance; x <= viewDistance; x++) {
+            for (int z = -viewDistance; z <= viewDistance; z++) {
+                int currentChunkX = playerChunkX + x;
+                int currentChunkZ = playerChunkZ + z;
+
+                if (world.isChunkLoaded(currentChunkX, currentChunkZ)) {
+                    WCK k = new WCK(world.getName(), currentChunkX, currentChunkZ);
+                    if (cc.getIfPresent(k) == null) {
+                        try {
+                            Chunk chunk = world.getChunkAt(currentChunkX, currentChunkZ);
+                            ChunkSnapshot snapshot = chunk.getChunkSnapshot(false, false, false);
+                            ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
+                            cvt.clear();
+
+                            for (int sy = -4; sy < 0; sy++) {
+                                byte[] sectionData = csp(snapshot, currentChunkX, currentChunkZ, sy, cvt);
+                                if (sectionData != null) {
+                                    pp.add(sectionData);
+                                }
+                            }
+
+                            cc.put(k, pp);
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static final int Y0_CHUNKS_PER_TICK = 8;
+
     public void resendChunksInView(Player p) {
         World world = p.getWorld();
         int viewDistance = p.getClientViewDistance();
         int playerChunkX = p.getLocation().getChunk().getX();
         int playerChunkZ = p.getLocation().getChunk().getZ();
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            for (int x = -viewDistance; x <= viewDistance; x++) {
-                for (int z = -viewDistance; z <= viewDistance; z++) {
-                    int currentChunkX = playerChunkX + x;
-                    int currentChunkZ = playerChunkZ + z;
-                    
-                    if (world.isChunkLoaded(currentChunkX, currentChunkZ)) {
-                        Chunk chunk = world.getChunkAt(currentChunkX, currentChunkZ);
-                        processAndSendChunk(p, chunk);
-                    }
+        List<int[]> chunks = new ArrayList<>();
+        for (int x = -viewDistance; x <= viewDistance; x++) {
+            for (int z = -viewDistance; z <= viewDistance; z++) {
+                int currentChunkX = playerChunkX + x;
+                int currentChunkZ = playerChunkZ + z;
+
+                if (world.isChunkLoaded(currentChunkX, currentChunkZ)) {
+                    chunks.add(new int[]{currentChunkX, currentChunkZ, x * x + z * z});
                 }
             }
-        });
+        }
+
+        chunks.sort((a, b) -> Integer.compare(a[2], b[2]));
+
+        sendY0ChunksBatched(p, world.getName(), chunks, 0);
+    }
+
+    private void sendY0ChunksBatched(Player p, String worldName, List<int[]> chunks, int startIndex) {
+        if (!p.isOnline() || startIndex >= chunks.size()) return;
+
+        int endIndex = Math.min(startIndex + Y0_CHUNKS_PER_TICK, chunks.size());
+        for (int i = startIndex; i < endIndex; i++) {
+            int[] chunk = chunks.get(i);
+            WCK k = new WCK(worldName, chunk[0], chunk[1]);
+            ObjectArrayList<byte[]> cachedData = cc.getIfPresent(k);
+            if (cachedData != null && !cachedData.isEmpty()) {
+                for (byte[] py : cachedData) {
+                    p.sendPluginMessage(plugin, CH, py);
+                }
+            }
+        }
+
+        if (endIndex < chunks.size()) {
+            final int nextStart = endIndex;
+            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                sendY0ChunksBatched(p, worldName, chunks, nextStart), 1);
+        }
     }
 
     private byte[] cby0sp(boolean s) {
@@ -336,11 +400,6 @@ public class Y0Plugin {
             return;
         }
 
-        ExecutorService executor = cp;
-        if (executor == null || executor.isShutdown()) {
-            return;
-        }
-
         if (ew != null && !ew.contains(c.getWorld().getName())) {
              return;
         }
@@ -355,19 +414,29 @@ public class Y0Plugin {
             }
             return;
         }
-        
+
         final ChunkSnapshot snapshot = c.getChunkSnapshot(false, false, false);
+        processSnapshotAsync(p, snapshot, c.getX(), c.getZ());
+    }
+
+    private void processSnapshotAsync(final Player p, final ChunkSnapshot snapshot, final int chunkX, final int chunkZ) {
+        ExecutorService executor = cp;
+        if (executor == null || executor.isShutdown()) {
+            return;
+        }
+
+        final WCK k = new WCK(snapshot.getWorldName(), chunkX, chunkZ);
 
         executor.submit(() -> {
             final ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
             final Object2ObjectOpenHashMap<BlockData, int[]> cvt = tlcc.get();
-            cvt.clear(); 
+            cvt.clear();
             for (int sy = -4; sy < 0; sy++) {
                 if (!p.isOnline()) {
                     return;
                 }
                 try {
-                    byte[] py = csp(snapshot, c.getX(), c.getZ(), sy, cvt);
+                    byte[] py = csp(snapshot, chunkX, chunkZ, sy, cvt);
                     if (py != null) {
                         pp.add(py);
                     }
@@ -377,16 +446,13 @@ public class Y0Plugin {
             }
             this.cc.put(k, pp);
             if (!pp.isEmpty()) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (p.isOnline()) {
-                            for (byte[] py : pp) {
-                                p.sendPluginMessage(plugin, CH, py);
-                            }
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (p.isOnline()) {
+                        for (byte[] py : pp) {
+                            p.sendPluginMessage(plugin, CH, py);
                         }
                     }
-                }.runTask(plugin);
+                });
             }
         });
     }
@@ -395,15 +461,161 @@ public class Y0Plugin {
         WCK k = new WCK(w.getName(), x >> 4, z >> 4);
         cc.invalidate(k);
     }
+
+    public byte[] getY0DataForChunk(Player p, int chunkX, int chunkZ) {
+        if (!isPlayerReady(p)) return null;
+        World world = p.getWorld();
+        if (ew == null || !ew.contains(world.getName())) return null;
+
+        WCK k = new WCK(world.getName(), chunkX, chunkZ);
+        ObjectArrayList<byte[]> cachedData = cc.getIfPresent(k);
+
+        if (cachedData != null) {
+            if (cachedData.isEmpty()) return null;
+            try {
+                ByteArrayOutputStream combined = new ByteArrayOutputStream();
+                for (byte[] section : cachedData) {
+                    combined.write(section);
+                }
+                return combined.toByteArray();
+            } catch (IOException e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public void preCacheY0Data(Player p, int chunkX, int chunkZ) {
+        if (!isPlayerReady(p)) return;
+        World world = p.getWorld();
+        if (ew == null || !ew.contains(world.getName())) return;
+
+        WCK k = new WCK(world.getName(), chunkX, chunkZ);
+        if (cc.getIfPresent(k) != null) return;
+
+        if (!world.isChunkLoaded(chunkX, chunkZ)) return;
+
+        try {
+            Chunk chunk = world.getChunkAt(chunkX, chunkZ);
+            ChunkSnapshot snapshot = chunk.getChunkSnapshot(false, false, false);
+            ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
+            Object2ObjectOpenHashMap<BlockData, int[]> cvt = new Object2ObjectOpenHashMap<>(256);
+
+            for (int sy = -4; sy < 0; sy++) {
+                byte[] sectionData = csp(snapshot, chunkX, chunkZ, sy, cvt);
+                if (sectionData != null) {
+                    pp.add(sectionData);
+                }
+            }
+
+            cc.put(k, pp);
+        } catch (Exception e) {
+        }
+    }
+
+    public void cacheChunkWithCallback(Player p, int chunkX, int chunkZ, Consumer<byte[]> callback) {
+        if (!isPlayerReady(p)) {
+            callback.accept(null);
+            return;
+        }
+        World world = p.getWorld();
+        if (ew == null || !ew.contains(world.getName())) {
+            callback.accept(null);
+            return;
+        }
+
+        WCK k = new WCK(world.getName(), chunkX, chunkZ);
+        ObjectArrayList<byte[]> existing = cc.getIfPresent(k);
+        if (existing != null) {
+            if (existing.isEmpty()) {
+                callback.accept(null);
+            } else {
+                try {
+                    ByteArrayOutputStream combined = new ByteArrayOutputStream();
+                    for (byte[] section : existing) {
+                        combined.write(section);
+                    }
+                    callback.accept(combined.toByteArray());
+                } catch (IOException e) {
+                    callback.accept(null);
+                }
+            }
+            return;
+        }
+
+        if (!world.isChunkLoaded(chunkX, chunkZ)) {
+            callback.accept(null);
+            return;
+        }
+
+        try {
+            Chunk chunk = world.getChunkAt(chunkX, chunkZ);
+            ChunkSnapshot snapshot = chunk.getChunkSnapshot(false, false, false);
+            ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
+            Object2ObjectOpenHashMap<BlockData, int[]> cvt = new Object2ObjectOpenHashMap<>(256);
+
+            for (int sy = -4; sy < 0; sy++) {
+                byte[] sectionData = csp(snapshot, chunkX, chunkZ, sy, cvt);
+                if (sectionData != null) {
+                    pp.add(sectionData);
+                }
+            }
+
+            cc.put(k, pp);
+
+            if (pp.isEmpty()) {
+                callback.accept(null);
+            } else {
+                ByteArrayOutputStream combined = new ByteArrayOutputStream();
+                for (byte[] section : pp) {
+                    combined.write(section);
+                }
+                callback.accept(combined.toByteArray());
+            }
+        } catch (Exception e) {
+            callback.accept(null);
+        }
+    }
     
     private void cp(UUID id) {
         aib.remove(id);
     }
 
     public void handlePlayerQuit(PlayerQuitEvent e) {
+        if (chunkInjector != null) {
+            chunkInjector.eject(e.getPlayer());
+        }
         cp(e.getPlayer().getUniqueId());
     }
-    
+
+    public void handleChunkLoad(org.bukkit.event.world.ChunkLoadEvent e) {
+        if (ew == null || !ew.contains(e.getWorld().getName())) return;
+
+        org.bukkit.Chunk chunk = e.getChunk();
+        int chunkX = chunk.getX();
+        int chunkZ = chunk.getZ();
+
+        WCK k = new WCK(e.getWorld().getName(), chunkX, chunkZ);
+        if (cc.getIfPresent(k) != null) return;
+
+        try {
+            ChunkSnapshot snapshot = chunk.getChunkSnapshot(false, false, false);
+            ObjectArrayList<byte[]> pp = new ObjectArrayList<>(4);
+            Object2ObjectOpenHashMap<BlockData, int[]> cvt = new Object2ObjectOpenHashMap<>(256);
+
+            for (int sy = -4; sy < 0; sy++) {
+                byte[] sectionData = csp(snapshot, chunkX, chunkZ, sy, cvt);
+                if (sectionData != null) {
+                    pp.add(sectionData);
+                }
+            }
+
+            cc.put(k, pp);
+        } catch (Exception ex) {
+        }
+    }
+
     private byte[] csp(ChunkSnapshot s, int x, int z, int sy, Object2ObjectOpenHashMap<BlockData, int[]> c) throws IOException {
         ShortArrayList ba = tlba.get();
         ByteArrayList la = tlla.get();
@@ -480,46 +692,37 @@ public class Y0Plugin {
         if (b.getY() < 0) {
             final Location l = b.getLocation();
             final World w = l.getWorld();
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    BlockData ud = w.getBlockData(l);
-                    ssbu(l, ud);
-                    icc(w, l.getBlockX(), l.getBlockZ());
-                }
-            }.runTask(plugin);
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                BlockData ud = w.getBlockData(l);
+                ssbu(l, ud);
+                icc(w, l.getBlockX(), l.getBlockZ());
+            });
         }
     }
 
     public void handleBlockExplode(BlockExplodeEvent e) {
         final ObjectOpenHashSet<WCK> ac = new ObjectOpenHashSet<>();
         final List<Block> btu = new ArrayList<>(e.blockList());
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Block b : btu) {
-                    if (b.getY() < 0) {
-                        ssbu(b.getLocation(), Material.AIR.createBlockData());
-                        ac.add(new WCK(b.getWorld().getName(), b.getX() >> 4, b.getZ() >> 4));
-                    }
-                }
-                if (!ac.isEmpty()) {
-                    ac.forEach(cc::invalidate);
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            for (Block b : btu) {
+                if (b.getY() < 0) {
+                    ssbu(b.getLocation(), Material.AIR.createBlockData());
+                    ac.add(new WCK(b.getWorld().getName(), b.getX() >> 4, b.getZ() >> 4));
                 }
             }
-        }.runTask(plugin);
+            if (!ac.isEmpty()) {
+                ac.forEach(cc::invalidate);
+            }
+        });
     }
 
     public void handleBlockFromTo(BlockFromToEvent e) {
         final Block b = e.getToBlock();
         if (b.getY() < 0) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ssbu(b.getLocation(), b.getBlockData());
-                    icc(b.getWorld(), b.getX(), b.getZ());
-                }
-            }.runTask(plugin);
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                ssbu(b.getLocation(), b.getBlockData());
+                icc(b.getWorld(), b.getX(), b.getZ());
+            });
         }
     }
 
@@ -536,16 +739,13 @@ public class Y0Plugin {
             o.writeShort((short) ((ld[1] << 12) | (ld[0] & 0xFFF)));
             byte[] py = b.toByteArray();
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    for (Player p : l.getWorld().getPlayers()) {
-                        if (p.getLocation().distanceSquared(l) < 4096) {
-                            p.sendPluginMessage(plugin, CH, py);
-                        }
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                for (Player p : l.getWorld().getPlayers()) {
+                    if (p.getLocation().distanceSquared(l) < 4096) {
+                        p.sendPluginMessage(plugin, CH, py);
                     }
                 }
-            }.runTask(plugin);
+            });
 
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to create single block update payload: " + e.getMessage());
@@ -576,16 +776,19 @@ public class Y0Plugin {
     private void slu(Location l) {
         ObjectOpenHashSet<CSC> stu = new ObjectOpenHashSet<>();
         World w = l.getWorld();
+        int bx = l.getBlockX();
+        int by = l.getBlockY();
+        int bz = l.getBlockZ();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    Location n = l.clone().add(dx, dy, dz);
-                    if (n.getY() < -64 || n.getY() >= 0) continue;
-                    
+                    int ny = by + dy;
+                    if (ny < -64 || ny >= 0) continue;
+
                     stu.add(new CSC(
-                        n.getBlockX() >> 4, 
-                        n.getBlockY() >> 4,
-                        n.getBlockZ() >> 4 
+                        (bx + dx) >> 4,
+                        ny >> 4,
+                        (bz + dz) >> 4
                     ));
                 }
             }
@@ -596,18 +799,15 @@ public class Y0Plugin {
             
             if (cp != null && !cp.isShutdown()) {
                 cp.submit(() -> {
-                     try {
+                    try {
                         byte[] py = clp(s, sc);
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                for (Player p : w.getPlayers()) {
-                                    if (p.isOnline() && p.getLocation().distanceSquared(l) < 4096) {
-                                        p.sendPluginMessage(plugin, CH, py);
-                                    }
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            for (Player p : w.getPlayers()) {
+                                if (p.isOnline() && p.getLocation().distanceSquared(l) < 4096) {
+                                    p.sendPluginMessage(plugin, CH, py);
                                 }
                             }
-                        }.runTask(plugin);
+                        });
                     } catch (IOException e) {
                         plugin.getLogger().severe("Failed to create lighting payload: " + e.getMessage());
                     }

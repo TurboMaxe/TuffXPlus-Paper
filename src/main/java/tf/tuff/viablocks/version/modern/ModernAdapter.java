@@ -199,6 +199,8 @@ public class ModernAdapter implements VersionAdapter {
             "SOUL_WALL_TORCH",
             "SOUL_LANTERN",
             "SOUL_FIRE",
+            "CAMPFIRE",
+            "SOUL_CAMPFIRE",
             "SHROOMLIGHT",
             "TARGET",
             "BLACKSTONE",

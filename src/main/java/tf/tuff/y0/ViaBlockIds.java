@@ -9,7 +9,6 @@ import com.viaversion.viabackwards.api.data.BackwardsMappingData;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.block.data.BlockData;
 import java.io.*;
 import java.util.*;
@@ -29,12 +28,7 @@ public class ViaBlockIds {
 
         Bukkit.getLogger().info("[TuffX] Server Minecraft Version: " + sv);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                im();
-            }
-        }.runTaskLater(pl, 1L);
+        Bukkit.getScheduler().runTaskLater(pl, this::im, 1L);
     }
 
     private void im() {
