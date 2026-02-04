@@ -66,7 +66,7 @@ public class SoundFileManager {
     }
 
     public List<String> getAllSoundPaths() {
-        return new ArrayList<>(palette);
+        return palette;
     }
 
     public int getPathIndex(String filePath) {
