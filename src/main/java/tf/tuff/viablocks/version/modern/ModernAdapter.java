@@ -51,6 +51,7 @@ public class ModernAdapter implements VersionAdapter {
             "DEAD_BUBBLE_CORAL_WALL_FAN",
             "DEAD_FIRE_CORAL_WALL_FAN",
             "DEAD_HORN_CORAL_WALL_FAN",
+            "BUBBLE_COLUMN",
             "SEA_PICKLE",
             "KELP",
             "KELP_PLANT",
