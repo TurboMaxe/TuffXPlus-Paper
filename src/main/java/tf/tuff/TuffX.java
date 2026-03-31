@@ -291,6 +291,5 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         getLogger().info("• shaded build, 1.14+ support (before merge) - llucasandersen");
         getLogger().info("• Restrictions - UplandJacob");
         getLogger().info("• Overall plugin merges by Potato");
-        getLogger().info("update v4");
     }
 }
