@@ -100,27 +100,29 @@ public class TuffActions {
             tuffPlayers.add(player.getUniqueId());
 
             switch (action.toLowerCase()) {
-                case "swimming_state":
+                case "swimming_state" -> {
                     if (swimmingEnabled) {
                         swimmingManager.handleSwimState(player, in.readBoolean());
                         break;
                     }
-                case "elytra_state":
+                }
+                case "elytra_state" -> {
                     if (swimmingEnabled) {
                         swimmingManager.handleElytraState(player, in.readBoolean());
                         break;
                     }
-                case "creative-ready":
+                }
+                case "creative-ready" -> {
                     if (creativeEnabled) {
                         creativeManager.handleCreativeReady(player);
-                        break;
                     }
-                case "swim_ready":
-                    if (swimmingEnabled) {
-                        swimmingManager.handleSwimReady(player);
-                        break;
+                }
+                case "swim_ready" -> {
+                        if (swimmingEnabled) {
+                            swimmingManager.handleSwimReady(player);
+                        }
                     }
-                case "give_creative_item":
+                case "give_creative_item" -> {
                     if (creativeEnabled) {
                         if (player.getGameMode() != GameMode.CREATIVE) return;
                         int itemLength = in.readUnsignedByte();
@@ -132,9 +134,9 @@ public class TuffActions {
                         String item = new String(itemBytes, StandardCharsets.UTF_8);
                         int amount = in.readInt();
                         creativeManager.handlePlaceholderTaken(player, item, amount);
-                        break;
                     }
-                case "pick_viablock":
+                }
+                case "pick_viablock" -> {
                     if (creativeEnabled) {
                         if (player.getGameMode() != GameMode.CREATIVE) return;
                         int blockLength = in.readUnsignedByte();
@@ -144,10 +146,10 @@ public class TuffActions {
                         String blockName = new String(blockBytes, StandardCharsets.UTF_8);
                         int hotbarSlot = in.readUnsignedByte();
                         creativeManager.handlePickViablock(player, blockName, hotbarSlot);
-                        break;
                     }
-                case "restrictions_ready":
-                    restrictions.handleRestrictionsReady(player);
+                }
+                case "restrictions_ready" ->
+                        restrictions.handleRestrictionsReady(player);
             }
 
         } catch (IOException e) {
@@ -176,15 +178,11 @@ public class TuffActions {
     }
 
     public void handleToggleSwim(EntityToggleSwimEvent event) {
-        if (swimmingEnabled) {
-            swimmingManager.handleToggleSwim(event);
-        }
+        if (swimmingEnabled) swimmingManager.handleToggleSwim(event);
     }
 
     public void handleToggleGlide(EntityToggleGlideEvent event) {
-        if (swimmingEnabled) {
-            swimmingManager.handleToggleGlide(event);
-        }
+        if (swimmingEnabled)  swimmingManager.handleToggleGlide(event);
     }
 
     public void handlePlayerInventoryClick(InventoryClickEvent event) {
