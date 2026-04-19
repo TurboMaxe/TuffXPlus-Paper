@@ -1,17 +1,16 @@
 package tf.tuff.tuffactions.creative;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
+import tf.tuff.tuffactions.TuffActions;
+
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.jetbrains.annotations.NotNull;
-import tf.tuff.tuffactions.TuffActions;
 
 public class TabUtil {
     private final TuffActions plugin;
@@ -33,15 +32,13 @@ public class TabUtil {
     }
 
     private void loadMapping() {
+
+        ObjectMapper mapper = new ObjectMapper();
+        TypeReference<Map<String, String>> typeRef = new TypeReference<>() {};
+
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            
-            TypeReference<Map<String, String>> typeRef = new TypeReference<>() {
-            };
-            
             this.creativeTabMap = mapper.readValue(mappingFile, typeRef);
             plugin.info("Successfully loaded " + creativeTabMap.size() + " creative tab mappings.");
-
         } catch (IOException e) {
             plugin.log(Level.SEVERE, "Failed to load creative tab mapping from file!", e);
             this.creativeTabMap = Collections.emptyMap();

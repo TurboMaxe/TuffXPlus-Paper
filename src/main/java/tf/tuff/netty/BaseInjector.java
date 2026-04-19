@@ -23,7 +23,7 @@ public abstract class BaseInjector {
 
 	public void inject(Player player) {
 		UUID uuid = player.getUniqueId();
-		var viaConnection = Via.getAPI().getConnection(uuid);
+		UserConnection viaConnection = Via.getAPI().getConnection(uuid);
 		if (viaConnection == null) return;
 
 		Channel channel = viaConnection.getChannel();

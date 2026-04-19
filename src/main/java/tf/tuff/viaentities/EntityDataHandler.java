@@ -1,12 +1,13 @@
 package tf.tuff.viaentities;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import org.bukkit.entity.Player;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import java.util.List;
 
 public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
 
@@ -19,6 +20,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
         this.player = player;
         this.entityMappingManager = plugin.entityMappingManager;
     }
+
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
@@ -66,7 +68,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -80,21 +82,17 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
             try {
                 java.lang.reflect.Method getTypeMethod = msg.getClass().getMethod("getType");
                 java.lang.reflect.Method getIdMethod = msg.getClass().getMethod("getId");
-                if (getTypeMethod != null && getIdMethod != null) {
-                    Object typeResult = getTypeMethod.invoke(msg);
-                    if (typeResult != null && typeResult.toString().contains("entity")) {
-                        isSpawnPacket = true;
-                    }
+                Object typeResult = getTypeMethod.invoke(msg);
+                if (typeResult != null && typeResult.toString().contains("entity")) {
+                    isSpawnPacket = true;
                 }
-            } catch (NoSuchMethodException e) {
-            } catch (Exception e) {
-            }
+            } catch (Exception ignored) {}
         }
 
         if (isSpawnPacket) {
             try {
                 handleSpawnPacket(msg);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         } else if (className.contains("EntityMetadata") || className.contains("SetEntityData") ||
                    simpleClassName.equals("PacketPlayOutEntityMetadata") ||
@@ -104,7 +102,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
                 if (entityId != -1) {
                     sendEntityMetadata(entityId, null);
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         } else if (className.contains("Animation") ||
                    simpleClassName.equals("PacketPlayOutAnimation") ||
@@ -115,14 +113,14 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
                 if (entityId != -1) {
                     sendEntityAnimation(entityId, animationType);
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         } else if (className.contains("EntityDestroy") || className.contains("RemoveEntities") ||
                    simpleClassName.equals("PacketPlayOutEntityDestroy") ||
                    simpleClassName.equals("ClientboundRemoveEntitiesPacket")) {
             try {
                 handleDestroyPacket(msg);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -182,8 +180,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
         for (java.lang.reflect.Field field : msg.getClass().getDeclaredFields()) {
             field.setAccessible(true);
             Object value = field.get(msg);
-            if (value instanceof it.unimi.dsi.fastutil.ints.IntList) {
-                it.unimi.dsi.fastutil.ints.IntList idList = (it.unimi.dsi.fastutil.ints.IntList) value;
+            if (value instanceof it.unimi.dsi.fastutil.ints.IntList idList) {
                 for (int i = 0; i < idList.size(); i++) {
                     sendEntityDestroy(idList.getInt(i));
                 }
@@ -332,8 +329,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
             out.writeUTF("ENTITY_METADATA");
             out.writeInt(entityId);
 
-            if (packedItems instanceof java.util.List) {
-                java.util.List<?> items = (java.util.List<?>) packedItems;
+            if (packedItems instanceof List<?> items) {
                 out.writeInt(items.size());
 
                 for (Object item : items) {
@@ -344,23 +340,28 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
                     java.lang.reflect.Method getValueMethod = item.getClass().getMethod("value");
                     Object value = getValueMethod.invoke(item);
 
-                    if (value instanceof Boolean) {
-                        out.writeByte(0);
-                        out.writeBoolean((Boolean) value);
-                    } else if (value instanceof Integer) {
-                        out.writeByte(1);
-                        out.writeInt((Integer) value);
-                    } else if (value instanceof Float) {
-                        out.writeByte(2);
-                        out.writeFloat((Float) value);
-                    } else if (value instanceof String) {
-                        out.writeByte(3);
-                        out.writeUTF((String) value);
-                    } else if (value instanceof Byte) {
-                        out.writeByte(4);
-                        out.writeByte((Byte) value);
-                    } else {
-                        out.writeByte(-1);
+                    switch (value) {
+                        case Boolean b -> {
+                            out.writeByte(0);
+                            out.writeBoolean(b);
+                        }
+                        case Integer i -> {
+                            out.writeByte(1);
+                            out.writeInt(i);
+                        }
+                        case Float v -> {
+                            out.writeByte(2);
+                            out.writeFloat(v);
+                        }
+                        case String s -> {
+                            out.writeByte(3);
+                            out.writeUTF(s);
+                        }
+                        case Byte b -> {
+                            out.writeByte(4);
+                            out.writeByte(b);
+                        }
+                        case null, default -> out.writeByte(-1);
                     }
                 }
             } else {
@@ -369,7 +370,7 @@ public class EntityDataHandler extends ChannelOutboundHandlerAdapter {
 
             byte[] data = out.toByteArray();
             player.sendPluginMessage(plugin.plugin, ViaEntitiesPlugin.CLIENTBOUND_CHANNEL, data);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 

@@ -1,12 +1,11 @@
 package tf.tuff.tuffactions.restrictions;
 
-import java.util.List;
-import java.util.logging.Level;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-
 import tf.tuff.TuffX;
+
+import java.util.List;
+import java.util.logging.Level;
 
 public class RestrictionsCommand {
     private final TuffX tuffx;
@@ -54,16 +53,17 @@ public class RestrictionsCommand {
 		} else if (args[0].equalsIgnoreCase("allow")) {
 			if (!sender.hasPermission("tuffx.restrictions.command.allow")) return noPermission(sender);
 			if (args.length < 2) return invalidUsage(sender, "Module name required.");
+			List<String> config = null;
 			try {
-				@SuppressWarnings("unchecked")
-				List<String> config = (List<String>)tuffx.getConfig().getList("restrictions.disallow");
-				if (!config.contains(args[1])) return error(sender, "Module '%s' not in disallow list. No change.".formatted(args[1]));
-				config.remove(args[1]);
+
+				config = (List<String>) tuffx.getConfig().getList("restrictions.disallow");
+				if (config != null && !config.contains(args[1])) return error(sender, "Module '%s' not in disallow list. No change.".formatted(args[1]));
+			    if (config != null) config.remove(args[1]);
 				tuffx.getConfig().set("restrictions.disallow", config);
 				tuffx.saveConfig();
 				restrictions.loadConfig();
 				restrictions.sendSingleUpdateToAll(args[1]);
-			} catch(Exception e) {
+			} catch (Exception e) {
 				return unknownError(sender, e);
 			}
 			sender.sendMessage("\u00A7aModule '%s' removed from disallow list.".formatted(args[1]));

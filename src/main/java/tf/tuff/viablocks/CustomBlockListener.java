@@ -1,7 +1,37 @@
 package tf.tuff.viablocks;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import lombok.Setter;
+import org.bukkit.Chunk;
+import org.bukkit.ChunkSnapshot;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Door;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import tf.tuff.viablocks.version.VersionAdapter;
+
+import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,29 +42,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import javax.annotation.Nonnull;
-
-import lombok.Setter;
-import org.bukkit.Chunk;
-import org.bukkit.ChunkSnapshot;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.type.Door;
-import org.bukkit.block.data.Bisected;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.*;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-
-import tf.tuff.viablocks.version.VersionAdapter;
 
 public class CustomBlockListener {
 
@@ -140,7 +147,7 @@ public class CustomBlockListener {
             }
         }
 
-        chunks.sort((a, b) -> Integer.compare(a[2], b[2]));
+        chunks.sort(Comparator.comparingInt(a -> a[2]));
 
         sendChunksBatched(player, world.getName(), chunks, 0);
     }
@@ -511,16 +518,8 @@ public class CustomBlockListener {
     private void sendPacket(Player player, int stateId, Location location) {
         if (!player.isOnline()) return;
         UUID playerId = player.getUniqueId();
-        Map<Integer, List<Long>> updateData = pendingUpdates.get(playerId);
-        if (updateData == null) {
-            updateData = new HashMap<>();
-            pendingUpdates.put(playerId, updateData);
-        }
-        List<Long> stateList = updateData.get(stateId);
-        if (stateList == null) {
-            stateList = new ArrayList<>();
-            updateData.put(stateId, stateList);
-        }
+        Map<Integer, List<Long>> updateData = pendingUpdates.computeIfAbsent(playerId, k -> new HashMap<>());
+        List<Long> stateList = updateData.computeIfAbsent(stateId, k -> new ArrayList<>());
         stateList.add(packLocation(location));
         if (pendingFlush.add(playerId)) {
             runSyncLater(() -> flushPendingUpdates(playerId), plugin.getUpdateBatchDelayTicks());
@@ -540,7 +539,6 @@ public class CustomBlockListener {
     }
 
     private int getMaterialId(BlockData data) {
-        @SuppressWarnings("null")
         Integer cachedId = blockDataIdCache.getIfPresent(data);
         if (cachedId != null) return cachedId;
 
@@ -551,14 +549,12 @@ public class CustomBlockListener {
     
     private byte[] buildChunkPacket(Map<Integer, List<Long>> blockData) {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("ADD_CHUNK"); 
+        out.writeUTF("ADD_CHUNK");
         out.writeInt(blockData.size());
         for (Map.Entry<Integer, List<Long>> entry : blockData.entrySet()) {
             out.writeInt(entry.getKey());
             out.writeInt(entry.getValue().size());
-            for (Long loc : entry.getValue()) {
-                out.writeLong(loc);
-            }
+            entry.getValue().forEach(out::writeLong);
         }
         return out.toByteArray();
     }
@@ -568,9 +564,7 @@ public class CustomBlockListener {
         out.writeUTF("INIT_PALETTE");
         List<String> palette = this.paletteManager.getPalette();
         out.writeInt(palette.size());
-        for (String state : palette) {
-            out.writeUTF(state);
-        }
+        palette.forEach(out::writeUTF);
         player.sendPluginMessage(plugin.plugin, ViaBlocksPlugin.CLIENTBOUND_CHANNEL, out.toByteArray());
     }
     
@@ -579,7 +573,8 @@ public class CustomBlockListener {
     }
 
     public void processChunkForSinglePlayer(Chunk chunk, Player player) {
-        if (!chunk.isLoaded() || !plugin.isPlayerEnabled(player)) return;
+        if (!chunk.isLoaded() ||
+            !plugin.isPlayerEnabled(player)) return;
         prepareChunkCache(chunk);
         byte[] data = getExtraDataForChunk(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
         if (data != null && data.length > 0) {

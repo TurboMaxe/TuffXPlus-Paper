@@ -68,10 +68,7 @@ public class CreativeMenu {
         if (material == null || !material.isItem()) {
             return;
         }
-        if (hotbarSlot < 0 || hotbarSlot > 8) {
-            hotbarSlot = 0;
-        }
-        player.getInventory().setItem(hotbarSlot, new ItemStack(material, 1));
+        player.getInventory().setItem(hotbarSlot > 8 || hotbarSlot < 0 ? 0 : hotbarSlot, new ItemStack(material, 1));
     }
 
     public void onPlayerInventoryClick(InventoryClickEvent event) {
@@ -82,7 +79,7 @@ public class CreativeMenu {
             InventoryAction action = event.getAction();
             if (action == InventoryAction.PLACE_ALL || action == InventoryAction.PLACE_ONE || action == InventoryAction.SWAP_WITH_CURSOR) {
 
-                Bukkit.getScheduler().runTaskLater(this.plugin.plugin, () -> {
+                Bukkit.getScheduler().runTaskLater(this.plugin.getPlugin(), () -> {
                     ItemStack realItemStack = playerHoldingPlaceholder.get(playerUUID);
                     
                     if (realItemStack != null && event.getClickedInventory() != null) {

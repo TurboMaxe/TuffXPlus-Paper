@@ -1,5 +1,11 @@
 package tf.tuff.tuffactions.restrictions;
 
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import tf.tuff.tuffactions.TuffActions;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -8,13 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
-import tf.tuff.tuffactions.TuffActions;
 
 public class Restrictions {
 	private final TuffActions plugin;
@@ -47,7 +46,7 @@ public class Restrictions {
 			plugin.plugin.saveConfig();
 			plugin.info("Restrictions config updated");
 		}
-	}
+	} 
 	public void loadConfig() {
 		disallowed.clear();
 		if (!TuffActions.restrictionsEnabled) return;

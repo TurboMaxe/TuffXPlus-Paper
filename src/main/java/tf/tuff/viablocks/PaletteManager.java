@@ -1,19 +1,16 @@
 package tf.tuff.viablocks;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import tf.tuff.viablocks.version.VersionAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-
-import tf.tuff.viablocks.version.VersionAdapter;
 
 public class PaletteManager {
     
@@ -32,7 +29,9 @@ public class PaletteManager {
         plugin.info("Generating ViaBlocks Pre-Defined Palette...");
         
         List<String> initialPalette = new ArrayList<>();
-
+        versionAdapter.getModernMaterials().stream().filter(Material::isBlock).forEach(
+                mat -> addEntryInternal(initialPalette, versionAdapter.getMaterialKey(mat)
+        ));
         for (Material material : versionAdapter.getModernMaterials()) {
             if (material.isBlock()) {
                 addEntryInternal(initialPalette, versionAdapter.getMaterialKey(material));
@@ -109,15 +108,12 @@ public class PaletteManager {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("NEW_PALETTE_ENTRY");
         out.writeUTF(state);
-        byte[] data = out.toByteArray();
 
         Bukkit.getScheduler().runTask(plugin.plugin, () -> {
             if (!plugin.plugin.isEnabled() || !plugin.isEnabled()) return;
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (plugin.isPlayerEnabled(player)) {
-                    player.sendPluginMessage(plugin.plugin, ViaBlocksPlugin.CLIENTBOUND_CHANNEL, data);
-                }
-            }
+            Bukkit.getOnlinePlayers().stream().filter(player -> plugin.isPlayerEnabled(player)).forEach(
+                    player -> player.sendPluginMessage(plugin.plugin, ViaBlocksPlugin.CLIENTBOUND_CHANNEL, out.toByteArray())
+            );
         });
     }
 
@@ -128,8 +124,7 @@ public class PaletteManager {
     public synchronized List<String> getPalette() {
         List<String> snapshot = paletteSnapshot;
         if (snapshot == null) {
-            snapshot = new ArrayList<>(palette);
-            paletteSnapshot = snapshot;
+            paletteSnapshot = new ArrayList<>(palette);
         }
         return snapshot;
     }

@@ -644,8 +644,8 @@ public class ModernAdapter implements VersionAdapter {
         if (clientViewDistanceMethod != null) {
             try {
                 Object value = clientViewDistanceMethod.invoke(player);
-                if (value instanceof Integer) {
-                    return (Integer) value;
+                if (value instanceof Integer integer) {
+                    return integer;
                 }
             } catch (Exception e) {
                 return player.getServer().getViewDistance();
