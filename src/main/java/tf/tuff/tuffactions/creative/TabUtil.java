@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.jetbrains.annotations.NotNull;
 import tf.tuff.tuffactions.TuffActions;
 
 public class TabUtil {
@@ -20,9 +21,7 @@ public class TabUtil {
     public TabUtil(TuffActions plugin) {
         this.plugin = plugin;
         this.mappingFile = new File(plugin.plugin.getDataFolder(), "tab-mapping.json");
-
         setupMappingFile();
-        
         loadMapping();
     }
 
@@ -37,7 +36,8 @@ public class TabUtil {
         try {
             ObjectMapper mapper = new ObjectMapper();
             
-            TypeReference<Map<String, String>> typeRef = new TypeReference<Map<String, String>>() {};
+            TypeReference<Map<String, String>> typeRef = new TypeReference<>() {
+            };
             
             this.creativeTabMap = mapper.readValue(mappingFile, typeRef);
             plugin.info("Successfully loaded " + creativeTabMap.size() + " creative tab mappings.");
@@ -49,10 +49,8 @@ public class TabUtil {
     }
 
     @Nullable
-    public String getCreativeCategory(String material) {
-        if (material == null || creativeTabMap.isEmpty()) {
-            return null;
-        }
+    public String getCreativeCategory(@NotNull String material) {
+        if (creativeTabMap.isEmpty()) return null;
         return creativeTabMap.get(material);
     }
 }

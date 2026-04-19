@@ -1,5 +1,7 @@
 package tf.tuff;
 
+import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,26 +29,31 @@ import tf.tuff.viablocks.ViaBlocksPlugin;
 import tf.tuff.viaentities.ViaEntitiesPlugin;
 import tf.tuff.y0.Y0Plugin;
 
-public class TuffX extends JavaPlugin implements Listener, PluginMessageListener {
+import java.util.List;
 
-    public ServerRegistry serverRegistry;
+public class TuffX extends JavaPlugin implements PluginMessageListener {
 
-    public Y0Plugin y0Plugin;
-    public ViaBlocksPlugin viaBlocksPlugin;
-    public TuffActions tuffActions;
-    public ViaEntitiesPlugin viaEntitiesPlugin;
-    private ChunkInjector chunkInjector;
+    private ServerRegistry serverRegistry;
+    @Getter private static TuffX instance;
+    @Getter private Y0Plugin y0Plugin;
+    @Getter private ViaBlocksPlugin viaBlocksPlugin;
+    @Getter private TuffActions tuffActions;
+    @Getter private ViaEntitiesPlugin viaEntitiesPlugin;
+
+    public TuffX() {
+        instance = this;
+    }
 
     @Override
     public void onLoad() {
-        this.y0Plugin = new Y0Plugin(this);
+        y0Plugin = new Y0Plugin(this);
         this.viaBlocksPlugin = new ViaBlocksPlugin(this);
         this.tuffActions = new TuffActions(this);
         this.viaEntitiesPlugin = new ViaEntitiesPlugin(this);
 
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
-                .checkForUpdates(false);
+        .checkForUpdates(false);
         PacketEvents.getAPI().load();
     }
 
@@ -55,16 +62,15 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         PacketEvents.getAPI().init();
 
         y0Plugin.onTuffXEnable();
-        tuffActions.onTuffXEnable();
+        tuffActions.load();
         viaBlocksPlugin.onTuffXEnable();
         viaEntitiesPlugin.onTuffXEnable();
 
-        chunkInjector = new ChunkInjector(viaBlocksPlugin.blockListener, y0Plugin);
+        ChunkInjector chunkInjector = new ChunkInjector(viaBlocksPlugin.blockListener, y0Plugin);
         viaBlocksPlugin.blockListener.setChunkInjector(chunkInjector);
         y0Plugin.setChunkInjector(chunkInjector);
 
         saveDefaultConfig();
-
         PacketEvents.getAPI().getEventManager().registerListener(
             new NetworkListener(this), PacketListenerPriority.NORMAL
         );
@@ -158,120 +164,32 @@ public class TuffX extends JavaPlugin implements Listener, PluginMessageListener
         else getLogger().warning("Received plugin message on unknown channel '%s' from %s".formatted(channel, player.getName()));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerChangeWorld(PlayerChangedWorldEvent e) {
-        y0Plugin.handlePlayerChangeWorld(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockForm(BlockFormEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockForm(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockFade(BlockFadeEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockFade(e);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerJoin(PlayerJoinEvent e) {
-        y0Plugin.handlePlayerJoin(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockGrow(BlockGrowEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockGrow(e);
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent e) {
-        y0Plugin.handlePlayerQuit(e);
-        tuffActions.handlePlayerQuit(e);
-        viaBlocksPlugin.blockListener.handlePlayerQuit(e);
-        viaEntitiesPlugin.handlePlayerQuit(e);
-    }
-
-    @EventHandler
-    public void onToggleSwim(EntityToggleSwimEvent e) {
-        tuffActions.handleToggleSwim(e);
-    }
-
-    @EventHandler
-    public void onToggleGlide(EntityToggleGlideEvent e) {
-        tuffActions.handleToggleGlide(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockSpread(BlockSpreadEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockSpread(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockBreak(e);
-        y0Plugin.handleBlockBreak(e);
-    }
-
-    @EventHandler
-    public void onPlayerInventoryClick(InventoryClickEvent e) {
-        tuffActions.handlePlayerInventoryClick(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockPlace(e);
-        y0Plugin.handleBlockPlace(e);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPhysics(BlockPhysicsEvent e) {
-        y0Plugin.handleBlockPhysics(e);
-        viaBlocksPlugin.blockListener.handleBlockPhysics(e);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onChunkLoad(ChunkLoadEvent e) {
-        y0Plugin.handleChunkLoad(e);
-        viaBlocksPlugin.blockListener.handleChunkLoad(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockExplode(BlockExplodeEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockExplode(e);
-        y0Plugin.handleBlockExplode(e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBlockFromTo(BlockFromToEvent e) {
-        viaBlocksPlugin.blockListener.handleBlockFromTo(e);
-        y0Plugin.handleBlockFromTo(e);
-    }
-
     private void lfe() {
-        getLogger().info("");
-        getLogger().info("████████╗██╗   ██╗███████╗ ███████╗ ██╗  ██╗");
-        getLogger().info("╚══██╔══╝██║   ██║██╔════╝ ██╔════╝ ╚██╗██╔╝");
-        getLogger().info("   ██║   ██║   ██║██████╗  ██████╗   ╚███╔╝ ");
-        getLogger().info("   ██║   ██║   ██║██╔═══╝  ██╔═══╝   ██╔██╗ ");
-        getLogger().info("   ██║   ╚██████╔╝██║      ██║      ██╔╝╚██╗");
-        getLogger().info("   ╚═╝    ╚═════╝ ╚═╝      ╚═╝      ╚═╝  ╚═╝");
-        getLogger().info("");
-        getLogger().info("CREDITS");
-        getLogger().info("");
-        getLogger().info("Y0 support:");
-        getLogger().info("• Below y0 (client + plugin) programmed by Potato (@justatypicalpotato)");
-        getLogger().info("• llucasandersen - plugin optimizations");
-        getLogger().info("");
-        getLogger().info("ViaBlocks:");
-        getLogger().info("• ViaBlocks partial plugin and client rewrite by Potato");
-        getLogger().info("• llucasandersen (Complex client models and texture fixes,");
-        getLogger().info("      optimizations, PacketEvents migration and async safety fixes)");
-        getLogger().info("• coleis1op, if ts is driving me crazy, im taking credit");
-        getLogger().info("");
-        getLogger().info("Other:");
-        getLogger().info("• Swimming and creative items programmed by Potato (@justatypicalpotato)");
-        getLogger().info("• shaded build, 1.14+ support (before merge) - llucasandersen");
-        getLogger().info("• Restrictions - UplandJacob");
-        getLogger().info("• Overall plugin merges by Potato");
+        List.of(
+                "████████╗██╗   ██╗███████╗ ███████╗ ██╗  ██╗",
+                "╚══██╔══╝██║   ██║██╔════╝ ██╔════╝ ╚██╗██╔╝",
+                "   ██║   ██║   ██║██████╗  ██████╗   ╚███╔╝ ",
+                "   ██║   ██║   ██║██╔═══╝  ██╔═══╝   ██╔██╗ ",
+                "   ██║   ╚██████╔╝██║      ██║      ██╔╝╚██╗",
+                "   ╚═╝    ╚═════╝ ╚═╝      ╚═╝      ╚═╝  ╚═╝",
+                "",
+                "CREDITS",
+                "",
+                "Y0 support:",
+                "• Below y0 (client + plugin) programmed by Potato (@justatypicalpotato)",
+                "• llucasandersen - plugin optimizations",
+                "",
+                "ViaBlocks:",
+                "• ViaBlocks partial plugin and client rewrite by Potato",
+                "• llucasandersen (Complex client models and texture fixes,",
+                "      optimizations, PacketEvents migration and async safety fixes)",
+                "• coleis1op, if ts is driving me crazy, im taking credit",
+                "",
+                "Other:",
+                "• Swimming and creative items programmed by Potato (@justatypicalpotato)",
+                "• shaded build, 1.14+ support (before merge) - llucasandersen",
+                "• Restrictions - UplandJacob",
+                "• Overall plugin merges by Potato"
+        ).forEach(Bukkit.getConsoleSender()::sendMessage);
     }
 }

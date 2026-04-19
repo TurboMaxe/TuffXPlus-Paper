@@ -12,10 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -29,18 +26,13 @@ public class CreativeMenu {
     public CreativeMenu(TuffActions plugin) {
         this.plugin = plugin;
         this.tabUtil = new TabUtil(plugin);
-        
-        if (TuffActions.creativeEnabled) {
-            initializeMappings();
-        }
+        if (TuffActions.creativeEnabled) initializeMappings();
     }
 
     public void initializeMappings() {
-        for (Material m : Material.values()){
-            if (m.isItem()){
-                itemMapping.add(m.name());
-            }
-        }
+        Arrays.stream(Material.values()).toList().forEach(m -> {
+            if (m.isItem()) itemMapping.add(m.name());
+        });
     }
 
     public void handleCreativeReady(Player player) {

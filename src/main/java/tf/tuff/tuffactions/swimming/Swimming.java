@@ -46,16 +46,14 @@ public class Swimming {
     }
 
     public void handleToggleSwim(EntityToggleSwimEvent event) {
-        if (!(event.getEntity() instanceof Player)) return;
-        Player player = (Player) event.getEntity();
+        if (!(event.getEntity() instanceof Player player)) return;
         if (!event.isSwimming() && swimmingPlayers.contains(player.getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     public void handleToggleGlide(EntityToggleGlideEvent event) {
-        if (!(event.getEntity() instanceof Player)) return;
-        Player player = (Player) event.getEntity();
+        if (!(event.getEntity() instanceof Player player)) return;
         if (!event.isGliding() && glidingPlayers.contains(player.getUniqueId())) {
             event.setCancelled(true);
         }
@@ -97,12 +95,11 @@ public class Swimming {
     }
 
     public void handleSwimReady(Player player) {
-        Player newPlayer = player;
         plugin.plugin.getServer().getScheduler().runTaskLater(plugin.plugin, () -> {
             for (UUID swimmingPlayerId : swimmingPlayers) {
                 Player swimmingPlayer = Bukkit.getPlayer(swimmingPlayerId);
                 if (swimmingPlayer != null && swimmingPlayer.isOnline()) {
-                    sendSwimState(newPlayer, swimmingPlayer, true);
+                    sendSwimState(player, swimmingPlayer, true);
                 }
             }
         }, 20L);

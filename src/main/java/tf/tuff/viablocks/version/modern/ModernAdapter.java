@@ -662,8 +662,6 @@ public class ModernAdapter implements VersionAdapter {
 
     private void addItemIfPresent(Player player, String materialName) {
         Material material = Material.matchMaterial(materialName);
-        if (material != null) {
-            player.getInventory().addItem(new ItemStack(material));
-        }
+        if (material != null) player.getInventory().addItem(new ItemStack(material));
     }
 }

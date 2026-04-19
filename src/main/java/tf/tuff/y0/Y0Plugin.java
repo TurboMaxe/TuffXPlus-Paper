@@ -39,7 +39,7 @@ public class Y0Plugin {
 
     public static final String CH = "eagler:below_y0";
     public ViaBlockIds v;
-    
+
     private final ObjectOpenHashSet<UUID> aib = new ObjectOpenHashSet<>();
     private ObjectOpenHashSet<String> ew;
     private volatile Cache<WCK, ObjectArrayList<byte[]>> cc;
@@ -52,7 +52,7 @@ public class Y0Plugin {
     private final ThreadLocal<byte[]> tlbd = ThreadLocal.withInitial(() -> new byte[12288]);
 
     private TuffX plugin;
-    
+
     private static final int[] EMPTY_LEGACY = {1, 0};
 
     private static final Map<BlockData, Integer> emissionCache = new ConcurrentHashMap<>();
@@ -71,30 +71,30 @@ public class Y0Plugin {
     }
 
     private static final Map<Material, Integer> legacy_light_map = Map.ofEntries(
-        Map.entry(Material.TORCH, 14),
-        Map.entry(Material.SOUL_TORCH, 10),
-        Map.entry(Material.LANTERN, 15),
-        Map.entry(Material.SOUL_LANTERN, 10),
-        Map.entry(Material.GLOWSTONE, 15),
-        Map.entry(Material.SEA_LANTERN, 15),
-        Map.entry(Material.REDSTONE_LAMP, 15),
-        Map.entry(Material.SHROOMLIGHT, 15),
-        Map.entry(Material.CAMPFIRE, 15),
-        Map.entry(Material.SOUL_CAMPFIRE, 10),
-        Map.entry(Material.END_ROD, 14),
-        Map.entry(Material.MAGMA_BLOCK, 3),
-        Map.entry(Material.FIRE, 15),
-        Map.entry(Material.SOUL_FIRE, 10),
-        Map.entry(Material.CANDLE, 3),
-        Map.entry(Material.WHITE_CANDLE, 3),
-        Map.entry(Material.CAKE, 0),
-        Map.entry(Material.CANDLE_CAKE, 3)
+            Map.entry(Material.TORCH, 14),
+            Map.entry(Material.SOUL_TORCH, 10),
+            Map.entry(Material.LANTERN, 15),
+            Map.entry(Material.SOUL_LANTERN, 10),
+            Map.entry(Material.GLOWSTONE, 15),
+            Map.entry(Material.SEA_LANTERN, 15),
+            Map.entry(Material.REDSTONE_LAMP, 15),
+            Map.entry(Material.SHROOMLIGHT, 15),
+            Map.entry(Material.CAMPFIRE, 15),
+            Map.entry(Material.SOUL_CAMPFIRE, 10),
+            Map.entry(Material.END_ROD, 14),
+            Map.entry(Material.MAGMA_BLOCK, 3),
+            Map.entry(Material.FIRE, 15),
+            Map.entry(Material.SOUL_FIRE, 10),
+            Map.entry(Material.CANDLE, 3),
+            Map.entry(Material.WHITE_CANDLE, 3),
+            Map.entry(Material.CAKE, 0),
+            Map.entry(Material.CANDLE_CAKE, 3)
     );
 
     public Y0Plugin(TuffX plugin){
         this.plugin = plugin;
     }
-    
+
     private void debug(String m) {
         if (d) plugin.getLogger().info("[Y0-Debug] " + m);
     }
@@ -116,11 +116,11 @@ public class Y0Plugin {
 
     public void onTuffXReload() {
         d = plugin.getConfig().getBoolean("y0.debug-mode", false);
-        
+
         ObjectArrayList<String> ewList = new ObjectArrayList<>(plugin.getConfig().getStringList("y0.enabled-worlds"));
         ew = new ObjectOpenHashSet<>(ewList.size());
         if (plugin.getConfig().getBoolean("y0.y0-enabled", false)) ew.addAll(ewList);
-    
+
         if (cc != null) {
             cc.invalidateAll();
         }
@@ -131,17 +131,17 @@ public class Y0Plugin {
         int cacheExp = plugin.getConfig().getInt("y0.cache-expiration", 5);
         int concLevel = Runtime.getRuntime().availableProcessors();
         cc = CacheBuilder.newBuilder()
-            .maximumSize(cacheSize)
-            .expireAfterAccess(cacheExp, TimeUnit.MINUTES)
-            .concurrencyLevel(concLevel)
-            .initialCapacity(256)
-            .build();
+                .maximumSize(cacheSize)
+                .expireAfterAccess(cacheExp, TimeUnit.MINUTES)
+                .concurrencyLevel(concLevel)
+                .initialCapacity(256)
+                .build();
         ccCombined = CacheBuilder.newBuilder()
-            .maximumSize(cacheSize)
-            .expireAfterAccess(cacheExp, TimeUnit.MINUTES)
-            .concurrencyLevel(concLevel)
-            .initialCapacity(256)
-            .build();
+                .maximumSize(cacheSize)
+                .expireAfterAccess(cacheExp, TimeUnit.MINUTES)
+                .concurrencyLevel(concLevel)
+                .initialCapacity(256)
+                .build();
 
         if (cp != null) {
             cp.shutdown();
@@ -154,7 +154,7 @@ public class Y0Plugin {
                 Thread.currentThread().interrupt();
             }
         }
-        
+
         int ct = plugin.getConfig().getInt("y0.chunk-processor-threads", -1);
         int tc;
         if (ct <= 0) {
@@ -162,13 +162,13 @@ public class Y0Plugin {
         } else {
             tc = ct;
         }
-        
+
         cp = Executors.newFixedThreadPool(tc, r -> {
             Thread t = new Thread(r, "TuffX-Chunk-" + System.nanoTime());
             t.setDaemon(true);
             t.setPriority(Thread.NORM_PRIORITY - 1);
             return t;
-        }); 
+        });
 
         emissionCache.clear();
 
@@ -190,17 +190,17 @@ public class Y0Plugin {
         int cacheExp2 = plugin.getConfig().getInt("y0.cache-expiration", 5);
         int concLevel2 = Runtime.getRuntime().availableProcessors();
         cc = CacheBuilder.newBuilder()
-            .maximumSize(cacheSize2)
-            .expireAfterAccess(cacheExp2, TimeUnit.MINUTES)
-            .concurrencyLevel(concLevel2)
-            .initialCapacity(256)
-            .build();
+                .maximumSize(cacheSize2)
+                .expireAfterAccess(cacheExp2, TimeUnit.MINUTES)
+                .concurrencyLevel(concLevel2)
+                .initialCapacity(256)
+                .build();
         ccCombined = CacheBuilder.newBuilder()
-            .maximumSize(cacheSize2)
-            .expireAfterAccess(cacheExp2, TimeUnit.MINUTES)
-            .concurrencyLevel(concLevel2)
-            .initialCapacity(256)
-            .build();
+                .maximumSize(cacheSize2)
+                .expireAfterAccess(cacheExp2, TimeUnit.MINUTES)
+                .concurrencyLevel(concLevel2)
+                .initialCapacity(256)
+                .build();
 
         plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, CH);
         plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, CH, plugin);
@@ -214,7 +214,7 @@ public class Y0Plugin {
         } else {
             tc = ct;
         }
-        
+
         cp = Executors.newFixedThreadPool(tc, r -> {
             Thread t = new Thread(r, "TuffX-Chunk-" + System.nanoTime());
             t.setDaemon(true);
@@ -253,7 +253,7 @@ public class Y0Plugin {
         }
 
         aib.clear();
-        
+
         if (v != null) {
             v = null;
         }
@@ -395,7 +395,7 @@ public class Y0Plugin {
         if (endIndex < chunks.size()) {
             final int nextStart = endIndex;
             plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                sendY0ChunksBatched(p, worldName, chunks, nextStart), 1);
+                    sendY0ChunksBatched(p, worldName, chunks, nextStart), 1);
         }
     }
 
@@ -641,7 +641,7 @@ public class Y0Plugin {
             }
         });
     }
-    
+
     private void cp(UUID id) {
         aib.remove(id);
     }
@@ -734,16 +734,16 @@ public class Y0Plugin {
         }
     }
 
-    public void handleBlockBreak(BlockBreakEvent e) { 
+    public void handleBlockBreak(BlockBreakEvent e) {
         if (e.getBlock().getY() < 0) {
-            hbc(e.getBlock().getLocation(), e.getBlock().getBlockData(), Material.AIR.createBlockData()); 
+            hbc(e.getBlock().getLocation(), e.getBlock().getBlockData(), Material.AIR.createBlockData());
             icc(e.getBlock().getWorld(), e.getBlock().getX(), e.getBlock().getZ());
         }
     }
 
-    public void handleBlockPlace(BlockPlaceEvent e) { 
+    public void handleBlockPlace(BlockPlaceEvent e) {
         if (e.getBlock().getY() < 0) {
-            hbc(e.getBlock().getLocation(), e.getBlockReplacedState().getBlockData(), e.getBlock().getBlockData()); 
+            hbc(e.getBlock().getLocation(), e.getBlockReplacedState().getBlockData(), e.getBlock().getBlockData());
             icc(e.getBlock().getWorld(), e.getBlock().getX(), e.getBlock().getZ());
         }
     }
@@ -789,7 +789,7 @@ public class Y0Plugin {
 
     private void ssbu(Location l, BlockData d) {
         try (ByteArrayOutputStream b = new ByteArrayOutputStream(64);
-            DataOutputStream o = new DataOutputStream(b)) {
+             DataOutputStream o = new DataOutputStream(b)) {
 
             o.writeUTF("block_update");
             o.writeInt(l.getBlockX());
@@ -846,9 +846,9 @@ public class Y0Plugin {
                     if (ny < -64 || ny >= 0) continue;
 
                     stu.add(new CSC(
-                        (bx + dx) >> 4,
-                        ny >> 4,
-                        (bz + dz) >> 4
+                            (bx + dx) >> 4,
+                            ny >> 4,
+                            (bz + dz) >> 4
                     ));
                 }
             }
@@ -856,7 +856,7 @@ public class Y0Plugin {
         for (CSC sc : stu) {
             if (!w.isChunkLoaded(sc.x, sc.z)) continue;
             ChunkSnapshot s = w.getChunkAt(sc.x, sc.z).getChunkSnapshot(true, false, false);
-            
+
             if (cp != null && !cp.isShutdown()) {
                 cp.submit(() -> {
                     try {
@@ -877,8 +877,8 @@ public class Y0Plugin {
     }
 
     private byte[] clp(ChunkSnapshot s, CSC sc) throws IOException {
-        try (ByteArrayOutputStream b = new ByteArrayOutputStream(4120); 
-            DataOutputStream o = new DataOutputStream(b)) {
+        try (ByteArrayOutputStream b = new ByteArrayOutputStream(4120);
+             DataOutputStream o = new DataOutputStream(b)) {
             o.writeUTF("lighting_update");
             o.writeInt(sc.x);
             o.writeInt(sc.z);

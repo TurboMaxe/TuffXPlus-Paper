@@ -7,8 +7,12 @@ import java.util.EnumSet;
 
 public interface VersionAdapter {
     String getBlockDataString(Block block);
+
     String getMaterialKey(Material material);
+
     int getClientViewDistance(Player player);
+
     void giveCustomBlocks(Player player);
+
     EnumSet<Material> getModernMaterials();
 }

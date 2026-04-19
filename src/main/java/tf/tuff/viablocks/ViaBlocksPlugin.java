@@ -82,11 +82,8 @@ public final class ViaBlocksPlugin {
 
     public void onTuffXEnable() {
         instance = this;
-
         this.chunkExecutor = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
-
         this.versionAdapter = new ModernAdapter();
-
         this.paletteManager = new PaletteManager(this.versionAdapter);
 
         try {

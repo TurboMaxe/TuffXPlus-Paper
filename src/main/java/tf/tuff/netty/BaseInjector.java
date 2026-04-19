@@ -1,9 +1,11 @@
 package tf.tuff.netty;
 
 import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.connection.UserConnection;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -36,12 +38,12 @@ public abstract class BaseInjector {
 
 				String targetHandler = null;
 				String[] anchors = {"packet_handler", "encoder", "via-encoder"};
-				for (int i = 0; i < anchors.length; ++i) {
-					if (channel.pipeline().get(anchors[i]) != null) {
-						targetHandler = anchors[i];
-						break;
-					}
-				}
+                for (String anchor : anchors) {
+                    if (channel.pipeline().get(anchor) != null) {
+                        targetHandler = anchor;
+                        break;
+                    }
+                }
 
 				ChannelHandler handler = createHandler(player);
 				if (targetHandler != null) {
@@ -58,19 +60,15 @@ public abstract class BaseInjector {
 	}
 
 	public void eject(Player player) {
-		UUID uuid = player.getUniqueId();
-		var viaConnection = Via.getAPI().getConnection(uuid);
-		if (viaConnection == null) return;
-
-		Channel channel = viaConnection.getChannel();
+		UserConnection viaConnection = Via.getAPI().getConnection(player.getUniqueId());
+		Channel channel = viaConnection != null ? viaConnection.getChannel() : null;
 		if (channel != null && channel.isOpen()) {
 			channel.eventLoop().submit(() -> {
 				try {
 					if (channel.pipeline().get(handlerName) != null) {
 						channel.pipeline().remove(handlerName);
 					}
-				} catch (Exception e) {
-				}
+				} catch (Exception ignored) {}
 			});
 		}
 	}
