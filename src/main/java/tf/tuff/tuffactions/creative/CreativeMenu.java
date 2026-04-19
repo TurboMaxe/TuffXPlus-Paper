@@ -1,23 +1,26 @@
 package tf.tuff.tuffactions.creative;
 
-import tf.tuff.tuffactions.TuffActions;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import tf.tuff.tuffactions.TuffActions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class CreativeMenu {
-    private final TuffActions plugin; 
+    private final TuffActions plugin;
     private final Set<String> itemMapping = ConcurrentHashMap.newKeySet();
     private final Map<UUID, ItemStack> playerHoldingPlaceholder = new ConcurrentHashMap<>();
     

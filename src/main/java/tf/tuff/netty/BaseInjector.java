@@ -5,7 +5,6 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -43,7 +42,7 @@ public abstract class BaseInjector {
                         targetHandler = anchor;
                         break;
                     }
-                }
+        }
 
 				ChannelHandler handler = createHandler(player);
 				if (targetHandler != null) {

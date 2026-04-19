@@ -1,28 +1,16 @@
 package tf.tuff;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.entity.EntityToggleSwimEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.PluginMessageListener;
-
-import com.github.retrooper.packetevents.PacketEvents;
-import com.github.retrooper.packetevents.event.PacketListenerPriority;
-
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import org.jetbrains.annotations.NotNull;
 import tf.tuff.listeners.BlockListener;
 import tf.tuff.listeners.PlayerListener;
 import tf.tuff.netty.ChunkInjector;
@@ -33,7 +21,7 @@ import tf.tuff.y0.Y0Plugin;
 
 import java.util.List;
 
-public class TuffX extends JavaPlugin implements PluginMessageListener {
+public final class TuffX extends JavaPlugin implements PluginMessageListener {
 
     private ServerRegistry serverRegistry;
     @Getter private static TuffX instance;
@@ -55,7 +43,7 @@ public class TuffX extends JavaPlugin implements PluginMessageListener {
 
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(false)
-        .checkForUpdates(false);
+                .checkForUpdates(false);
         PacketEvents.getAPI().load();
     }
 
@@ -109,6 +97,20 @@ public class TuffX extends JavaPlugin implements PluginMessageListener {
         PacketEvents.getAPI().terminate();
     }
 
+    @Override
+    public void onPluginMessageReceived(@NotNull String channel, Player player, byte[] message) {
+        if (!player.isOnline()) return;
+
+        switch (channel) {
+            case "eagler:below_y0" -> y0Plugin.handlePacket(player, message);
+            case "viablocks:handshake" -> viaBlocksPlugin.handlePacket(player, message);
+            case "eagler:tuffactions" -> tuffActions.handlePacket(player, message);
+            case "entities:handshake" -> viaEntitiesPlugin.handlePacket(player, message);
+            default ->
+               getLogger().warning("Received plugin message on unknown channel '%s' from %s".formatted(channel, player.getName()));
+        }
+    }
+
     public void reloadTuffX(){
         reloadConfig();
         saveDefaultConfig();
@@ -119,22 +121,19 @@ public class TuffX extends JavaPlugin implements PluginMessageListener {
         }
 
         setupRegistry();
-
         viaBlocksPlugin.onTuffXReload();
         y0Plugin.onTuffXReload();
         tuffActions.onTuffXReload();
         viaEntitiesPlugin.onTuffXReload();
-
         getLogger().info("TuffX reloaded.");
     }
 
     public boolean TuffXCommand(CommandSender sender, Command command, String label, String[] args){
         if (args.length > 0) {
             if (args[0].equalsIgnoreCase("reload")) {
-                if (!(sender instanceof Player)) {
+                if (!(sender instanceof Player player)) {
                     reloadTuffX();
                 } else {
-                    Player player = (Player) sender;
                     if (!player.hasPermission("tuffx.reload")) {
                         player.sendMessage("§cYou do not have permission to use this command.");
                         return false;
@@ -148,22 +147,11 @@ public class TuffX extends JavaPlugin implements PluginMessageListener {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String @NotNull [] args) {
         if (command.getName().equalsIgnoreCase("tuffx")) return TuffXCommand(sender, command, label, args);
         if (command.getName().equalsIgnoreCase("viablocks")) return viaBlocksPlugin.onTuffXCommand(sender, command, label, args);
         if (command.getName().equalsIgnoreCase("restrictions")) return tuffActions.onTuffXCommand(sender, command, label, args);
         return true;
-    }
-
-    @Override
-    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        if (!player.isOnline()) return;
-
-        if (channel.equals("eagler:below_y0")) y0Plugin.handlePacket(player,message);
-        else if (channel.equals("viablocks:handshake")) viaBlocksPlugin.handlePacket(player,message);
-        else if (channel.equals("eagler:tuffactions")) tuffActions.handlePacket(player,message);
-        else if (channel.equals("entities:handshake")) viaEntitiesPlugin.handlePacket(player,message);
-        else getLogger().warning("Received plugin message on unknown channel '%s' from %s".formatted(channel, player.getName()));
     }
 
     private void lfe() {

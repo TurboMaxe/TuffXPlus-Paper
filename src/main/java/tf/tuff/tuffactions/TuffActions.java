@@ -99,7 +99,6 @@ public class TuffActions {
 
             tuffPlayers.add(player.getUniqueId());
 
-            // This may or may not work - turbo
             switch (action.toLowerCase()) {
                 case "swimming_state":
                     if (swimmingEnabled) {
