@@ -68,7 +68,27 @@ public final class TuffX extends JavaPlugin implements PluginMessageListener {
         Bukkit.getPluginManager().registerEvents(new BlockListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         setupRegistry();
-        lfe();
+        List.of(
+                "████████╗██╗   ██╗███████╗ ███████╗ ██╗  ██╗",
+                "╚══██╔══╝██║   ██║██╔════╝ ██╔════╝ ╚██╗██╔╝",
+                "   ██║   ██║   ██║██████╗  ██████╗   ╚███╔╝ ",
+                "   ██║   ██║   ██║██╔═══╝  ██╔═══╝   ██╔██╗ ",
+                "   ██║   ╚██████╔╝██║      ██║      ██╔╝╚██╗",
+                "   ╚═╝    ╚═════╝ ╚═╝      ╚═╝      ╚═╝  ╚═╝",
+                "",
+                "CREDITS",
+                "Y0 support:",
+                "• Below y0 (client + plugin) programmed by Potato (@justatypicalpotato)",
+                "• llucasandersen - plugin optimizations",
+                "• ViaBlocks partial plugin and client rewrite by Potato",
+                "• llucasandersen (Complex client models and texture fixes,",
+                "  optimizations, PacketEvents migration and async safety fixes)",
+                "• coleis1op, if ts is driving me crazy, im taking credit",
+                "• Swimming and creative items programmed by Potato (@justatypicalpotato)",
+                "• shaded build, 1.14+ support (before merge) - llucasandersen",
+                "• Restrictions - UplandJacob",
+                "• Overall plugin merges by Potato"
+        ).forEach(Bukkit.getConsoleSender()::sendMessage);
     }
 
     private void setupRegistry() {
@@ -152,34 +172,5 @@ public final class TuffX extends JavaPlugin implements PluginMessageListener {
         if (command.getName().equalsIgnoreCase("viablocks")) return viaBlocksPlugin.onTuffXCommand(sender, command, label, args);
         if (command.getName().equalsIgnoreCase("restrictions")) return tuffActions.onTuffXCommand(sender, command, label, args);
         return true;
-    }
-
-    private void lfe() {
-        List.of(
-                "████████╗██╗   ██╗███████╗ ███████╗ ██╗  ██╗",
-                "╚══██╔══╝██║   ██║██╔════╝ ██╔════╝ ╚██╗██╔╝",
-                "   ██║   ██║   ██║██████╗  ██████╗   ╚███╔╝ ",
-                "   ██║   ██║   ██║██╔═══╝  ██╔═══╝   ██╔██╗ ",
-                "   ██║   ╚██████╔╝██║      ██║      ██╔╝╚██╗",
-                "   ╚═╝    ╚═════╝ ╚═╝      ╚═╝      ╚═╝  ╚═╝",
-                "",
-                "CREDITS",
-                "",
-                "Y0 support:",
-                "• Below y0 (client + plugin) programmed by Potato (@justatypicalpotato)",
-                "• llucasandersen - plugin optimizations",
-                "",
-                "ViaBlocks:",
-                "• ViaBlocks partial plugin and client rewrite by Potato",
-                "• llucasandersen (Complex client models and texture fixes,",
-                "      optimizations, PacketEvents migration and async safety fixes)",
-                "• coleis1op, if ts is driving me crazy, im taking credit",
-                "",
-                "Other:",
-                "• Swimming and creative items programmed by Potato (@justatypicalpotato)",
-                "• shaded build, 1.14+ support (before merge) - llucasandersen",
-                "• Restrictions - UplandJacob",
-                "• Overall plugin merges by Potato"
-        ).forEach(Bukkit.getConsoleSender()::sendMessage);
     }
 }
