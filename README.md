@@ -1,7 +1,8 @@
 # TuffX+
 
 > [!WARNING]
-> This is not a "crack" for Minecraft, it simply allows for better TuffClient integration on servers.
+> This plugin does not allow Swimming for TuffClient users if the server is on Paper. 
+
 
 ![preview](./img/showcase.png)
 
