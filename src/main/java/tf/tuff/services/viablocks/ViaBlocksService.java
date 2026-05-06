@@ -1,20 +1,19 @@
 package tf.tuff.services.viablocks;
 
+import com.github.puregero.multilib.MultiLib;
 import lombok.Getter;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Material;
+import net.kyori.adventure.inventory.Book;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
+import org.jetbrains.annotations.NotNull;
 import tf.tuff.TuffX;
 import tf.tuff.services.ServiceBase;
 import tf.tuff.services.viablocks.version.VersionAdapter;
@@ -29,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class ViaBlocksService implements ServiceBase {
 
@@ -36,6 +36,7 @@ public final class ViaBlocksService implements ServiceBase {
     public static final String SERVERBOUND_CHANNEL = "viablocks:handshake";
 
     public final Set<UUID> viaBlocksEnabledPlayers = new HashSet<>();
+    @Getter
     public CustomBlockListener blockListener;
     static ViaBlocksService instance;
 
@@ -43,7 +44,9 @@ public final class ViaBlocksService implements ServiceBase {
     private FileConfiguration playerDataConfig;
     private final Set<UUID> joinedPlayersCache = new HashSet<>();
 
+    @Getter
     private boolean enabled;
+    @Getter
     private boolean debug;
     private boolean sendWelcomeBook;
 
@@ -117,7 +120,7 @@ public final class ViaBlocksService implements ServiceBase {
 
     public void handlePacket(Player player, byte[] message) {
         if (!isPlayerEnabled(player) && isEnabled()) {
-            debug("Received ViaBlocks handshake from player: " + player.getName() + ". Enabling custom blocks.");
+            debug("Received ViaBlocks handshake from player: %s. Enabling custom blocks.".formatted(player.getName()));
             setPlayerEnabled(player, true);
 
             blockListener.onViaBlocksPlayerJoin(player);
@@ -151,7 +154,7 @@ public final class ViaBlocksService implements ServiceBase {
                 if (!playerDataFile.createNewFile()) severe("Could not create players.yml!");
             } catch (IOException e) {
                 severe("Could not create players.yml!");
-                e.printStackTrace();
+                severe(e.getMessage());
             }
         }
         playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
@@ -179,39 +182,29 @@ public final class ViaBlocksService implements ServiceBase {
                 playerDataConfig.save(playerDataFile);
             } catch (IOException e) {
                 severe("Could not save to players.yml!");
-                e.printStackTrace();
+                log(Level.SEVERE, e.getMessage());
             }
         }
     }
     public void sendWelcomeGui(Player player) {
         if (!this.sendWelcomeBook) return;
-        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
-        BookMeta meta = (BookMeta) book.getItemMeta();
-        if (meta == null) return;
-        meta.setTitle("ViaBlocks Information");
-        meta.setAuthor("ViaBlocks");
-        TextComponent welcome = new TextComponent("Welcome to ViaBlocks!");
-        welcome.setColor(ChatColor.DARK_AQUA);
-        welcome.setBold(true);
-        TextComponent body = new TextComponent("\n\nThis feature is in active development!\n\nIf you find any visual bugs or issues, please report them on our ");
-        body.setColor(ChatColor.BLACK);
-        TextComponent link = new TextComponent("bug tracker");
-        link.setColor(ChatColor.BLUE);
-        link.setUnderlined(true);
-        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/TuffNetwork/ViaIssuesBlocks/issues"));
-        link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open the bug tracker!").color(ChatColor.GRAY).create()));
-        TextComponent disclaimer = new TextComponent("\n\n(Bamboo and kelp are noted.)");
-        disclaimer.setColor(ChatColor.DARK_GRAY);
-        disclaimer.setItalic(true);
-        meta.spigot().addPage(new ComponentBuilder("").append(welcome).append(body).append(link).append(new TextComponent(".")).append(disclaimer).create());
-        book.setItemMeta(meta);
-        plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
+        Book book = Book.book(Component.text("ViaBlocks Information"),
+                              Component.text("ViaBlocks"));
+        book.pages(
+            List.of(
+                Component.text("Welcome to ViaBlocks!").color(NamedTextColor.DARK_AQUA).decorate(TextDecoration.BOLD),
+                Component.text("\n\nThis feature is in active development!\n\n If you find any bugs or issues, please report them on our")
+                    .append(Component.text("bug .").color(NamedTextColor.BLUE))
+                    .clickEvent(ClickEvent.openUrl("https://github.com/TuffNetwork/ViaIssuesBlocks/issues\""))
+                    .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
+                        Component.text("Click to open the bug tracker!", NamedTextColor.GRAY))
+                    ),
+                Component.text("Bamboo and kelp are noted.", NamedTextColor.DARK_GRAY).decorate(TextDecoration.ITALIC)
+            )
+        );
+        MultiLib.getEntityScheduler(player).run(plugin, t -> player.openBook(book), null);
     }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-    
     public boolean isPlayerEnabled(Player player) {
         if (player == null) return false;
         return viaBlocksEnabledPlayers.contains(player.getUniqueId());
@@ -225,69 +218,59 @@ public final class ViaBlocksService implements ServiceBase {
         }
     }
 
-    public CustomBlockListener getBlockListener() {
-        return this.blockListener;
-    }
-
     public boolean onTuffXCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by a player.");
             return true;
         }
-        Player player = (Player) sender;
         if (args.length > 0) {
             if (args[0].equalsIgnoreCase("get")) {
                 if (!player.hasPermission("tuffx.viablocks.command.get")) {
-                    player.sendMessage("\u00A7cYou do not have permission to use this command.");
+                    player.sendMessage("§cYou do not have permission to use this command.");
                     return true;
                 }
                 this.versionAdapter.giveCustomBlocks(player);
-                player.sendMessage("\u00A7aYou have been given a set of custom blocks.");
+                player.sendMessage("§aYou have been given a set of custom blocks.");
                 return true;
             } else if (args[0].equalsIgnoreCase("refresh")) {
                 if (!player.hasPermission("tuffx.viablocks.command.refresh")) {
-                    player.sendMessage("\u00A7cYou do not have permission to use this command.");
+                    player.sendMessage("§cYou do not have permission to use this command.");
                     return true;
                 }
-                player.sendMessage("\u00A7aRefreshing modern blocks in your view distance...");
+                player.sendMessage("§aRefreshing modern blocks in your view distance...");
                 World world = player.getWorld();
                 int viewDistance = this.versionAdapter.getClientViewDistance(player);
-                int playerChunkX = player.getLocation().getChunk().getX();
-                int playerChunkZ = player.getLocation().getChunk().getZ();
                 for (int x = -viewDistance; x <= viewDistance; x++) {
                     for (int z = -viewDistance; z <= viewDistance; z++) {
-                        int chunkX = playerChunkX + x;
-                        int chunkZ = playerChunkZ + z;
+                        int chunkX = player.getLocation().getChunk().getX() + x;
+                        int chunkZ = player.getLocation().getChunk().getZ() + z;
                         if (world.isChunkLoaded(chunkX, chunkZ)) {
                             blockListener.processChunkForSinglePlayer(world.getChunkAt(chunkX, chunkZ), player);
                         }
                     }
                 }
-                player.sendMessage("\u00A7aRefresh complete!");
+                player.sendMessage("§aRefresh complete!");
                 return true;
             }
         }
-        player.sendMessage("\u00A7cInvalid usage. Use: /viablocks <get|refresh>");
-        return true;
+        player.sendMessage("§cInvalid usage. Use: /viablocks <get|refresh>");
+        return false;
     }
 
-    public boolean isDebug() {
-        return debug;
-    }
-    public void debug(String message) {
-        if (isDebug()) info(message);
+    private final Logger LOG = Logger.getLogger("TuffX");
+
+    private void debug(@NotNull String message) {
+        if (isDebug()) LOG.info(message);
     }
 
-    public void log(Level level, String msg, Throwable e) {
-        plugin.getLogger().log(level, "[ViaBlocks] "+msg, e);
+    private void log(Level level, String msg) {
+        LOG.log(level, "[ViaBlocks] %s".formatted(msg));
     }
-    public void log(Level level, String msg) {
-        plugin.getLogger().log(level, "[ViaBlocks] "+msg);
-    }
-    public void info(String msg) {
+
+    public void info(@NotNull String msg) {
         log(Level.INFO, msg);
     }
-    public void severe(String msg) {
+    private void severe(@NotNull String msg) {
         log(Level.SEVERE, msg);
     }
 }
