@@ -1,6 +1,7 @@
 package tf.tuff.services.viablocks;
 
 import com.github.puregero.multilib.MultiLib;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
@@ -32,8 +33,14 @@ import java.util.logging.Logger;
 
 public final class ViaBlocksService implements ServiceBase {
 
-    public static final String CLIENTBOUND_CHANNEL = "viablocks:data";
-    public static final String SERVERBOUND_CHANNEL = "viablocks:handshake";
+    @Getter
+    @AllArgsConstructor
+    enum Channels {
+        CLIENTBOUND_CHANNEL("viablocks:data"),
+        SERVERBOUND_CHANNEL("viablocks:handshake");
+
+        private String name;
+    }
 
     public final Set<UUID> viaBlocksEnabledPlayers = new HashSet<>();
     @Getter
@@ -109,8 +116,8 @@ public final class ViaBlocksService implements ServiceBase {
         setupPlayerData();
            
 
-        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, CLIENTBOUND_CHANNEL);
-        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, SERVERBOUND_CHANNEL, plugin);
+        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, Channels.CLIENTBOUND_CHANNEL.getName());
+        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, Channels.SERVERBOUND_CHANNEL.getName(), plugin);
 
         this.blockListener = new CustomBlockListener(this, this.versionAdapter, this.paletteManager);
 
@@ -137,8 +144,8 @@ public final class ViaBlocksService implements ServiceBase {
     }
 
     public void onTuffXDisable(){
-        plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, CLIENTBOUND_CHANNEL); 
-        plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, SERVERBOUND_CHANNEL); 
+        plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, Channels.CLIENTBOUND_CHANNEL.getName()); 
+        plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, Channels.SERVERBOUND_CHANNEL.getName()); 
 
         if (chunkExecutor != null) {
             chunkExecutor.shutdownNow();
